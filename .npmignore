@@ -1,0 +1,7 @@
+# source files
+/.*
+/*.tgz
+/config
+/source
+/example
+/stats.json

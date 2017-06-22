@@ -1,0 +1,51 @@
+{
+  "name": "dr-city",
+  "version": "0.0.0",
+  "author": "dr-js",
+  "license": "MIT",
+  "description": "Server of Dr.city",
+  "keywords": [
+    "Dr",
+    "Dr-js",
+    "JavaScript"
+  ],
+  "homepage": "https://github.com/dr-js/dr-city#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dr-js/dr-city.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dr-js/dr-city/issues"
+  },
+  "bin": "bin/index.js",
+  "main": "library/index.js",
+  "scripts": {
+    "perf-webpack-stats": "cross-env NODE_ENV=production webpack --config config/library.conf.js --json > stats.json",
+    "example": "cross-env NODE_ENV=development webpack --watch --config config/example.conf.js",
+    "library": "cross-env NODE_ENV=production webpack --config config/library.conf.js",
+    "build": "npm run library",
+    "prepare": "npm run build"
+  },
+  "engines": {
+    "node": "8.x",
+    "npm": "5.x"
+  },
+  "devDependencies": {
+    "babel-core": "^6.25.0",
+    "babel-eslint": "^7.2.3",
+    "babel-loader": "^7.1.1",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-plugin-transform-object-rest-spread": "^6.23.0",
+    "babel-preset-env": "^1.6.0",
+    "cross-env": "^5.0.5",
+    "dr-js": "0.0.11",
+    "eslint": "^4.4.1",
+    "eslint-config-standard": "^10.2.1",
+    "eslint-plugin-import": "^2.7.0",
+    "eslint-plugin-node": "^5.1.1",
+    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-standard": "^3.0.1",
+    "firebase-admin": "^5.1.0",
+    "webpack": "^3.5.4"
+  }
+}
