@@ -6,9 +6,9 @@ const COMMON_HEAD_CONTENT = `<meta charset="utf-8">
 <link href="/static/favicon.ico" rel="shortcut icon">`
 
 const STYLE_RESET = `<style>
-*, *::before, *::after { margin: 0; padding: 0; border: 0; box-sizing: border-box; }
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { width: 100%; height: 100%; overflow: hidden; font-family: monospace; font-size: 16px; }
-button { cursor: pointer; font: inherit; }
+button { font: inherit; }
 textarea { outline: none; resize: none; background: transparent; }
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.3); border-radius: 3px; }

@@ -1,7 +1,7 @@
 import nodeModuleFs from 'fs'
 import { promisify } from 'util'
 import { Common, Node } from 'dr-js/library/Dr.node'
-import { initFirebaseAdmin, responseReducerAuthVerifyToken } from './Responder'
+import { initFirebaseAdmin, responseReducerAuthVerifyToken, applyWebSocketServer } from './Responder'
 import { responseReducerRenderView } from './View'
 import { createStatisticLogger } from './Task/saveStatistics'
 
@@ -19,8 +19,13 @@ const {
       createResponseReducerParseURL,
       createResponseReducerServeStatic,
       createResponseReducerLogRequestHeader,
-      createResponseReducerLogTimeStep,
+      // createResponseReducerLogTimeStep,
       createResponseReducerLogEnd
+    },
+    WebSocket: {
+      WEB_SOCKET_EVENT_MAP,
+      DATA_TYPE_MAP,
+      enableWebSocketServer
     }
   }
 } = Node
@@ -49,10 +54,6 @@ const configureServer = async ({ protocol, hostName, port, fileSSLKey, fileSSLCe
     store.setState({ filePath: 'favicon.ico' })
     return responseReducerServeStatic(store)
   }
-
-  const responseReducerLogRequestHeader = createResponseReducerLogRequestHeader((data) => logStatistic(`[REQUEST] ${data.method} ${data.host} ${data.url} ${data.remoteAddress} ${data.remotePort} ${data.userAgent}`))
-  const responseReducerLogEnd = createResponseReducerLogEnd((data, state) => logStatistic(!state.error ? `[END] ${Format.time(data.duration)} ${data.statusCode}` : `[ERROR] ${Format.time(data.duration)} ${data.statusCode} ${data.error} ${data.finished}`))
-  // const responseReducerLogTimeStep = createResponseReducerLogTimeStep((stepTime) => logStatistic(`[STEP] ${Format.time(stepTime)}`))
 
   // set router
   const routerMapBuilder = createRouterMapBuilder()
@@ -86,13 +87,21 @@ const configureServer = async ({ protocol, hostName, port, fileSSLKey, fileSSLCe
   }, protocol)
 
   applyResponseReducerList(server, [
-    responseReducerLogRequestHeader,
+    createResponseReducerLogRequestHeader((data) => logStatistic(`[REQUEST] ${data.method} ${data.host} ${data.url} ${data.remoteAddress} ${data.remotePort} ${data.userAgent}`)),
     createResponseReducerParseURL(),
+    // createResponseReducerLogTimeStep((stepTime) => logStatistic(`[STEP] ${Format.time(stepTime)}`)),
     protocol === 'HTTPS'
       ? wrapSetHSTS(createResponseReducerRouter(routerMapBuilder.getRouterMap()))
       : createResponseReducerRouter(routerMapBuilder.getRouterMap()),
-    responseReducerLogEnd
+    createResponseReducerLogEnd((data, state) => logStatistic(
+      !state.error
+        ? `[END] ${Format.time(data.duration)} ${data.statusCode}`
+        : `[ERROR] ${Format.time(data.duration)} ${data.statusCode} ${data.error} ${data.finished}`
+    ))
   ])
+
+  // enable websocket
+  applyWebSocketServer(server)
 
   return { server, start }
 }

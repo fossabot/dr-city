@@ -1,9 +1,9 @@
 import { Common, Node } from 'dr-js/library/Dr.node'
-
 import { renderDefault } from './default'
 import { renderHome } from './home'
 import { renderAuth } from './auth'
 import { renderServerStatus } from './serverStatus'
+import { renderWebSocket } from './webSocket'
 
 const { Format } = Common
 const { createResponseReducerBufferCache } = Node.Server.ResponseReducer
@@ -12,6 +12,7 @@ const renderKeyMap = {
   'home': renderHome,
   'auth': renderAuth,
   'server-status': renderServerStatus,
+  'websocket': renderWebSocket,
   'default': renderDefault
 }
 
