@@ -7,9 +7,9 @@ import { renderServerStatus } from './serverStatus'
 import { renderStaticFileList } from './staticFileList'
 
 const { Format } = Common
-const { createResponseReducerBufferCache } = Node.Server.ResponseReducer
+const { createResponderBufferCache } = Node.Server.Responder
 
-const createResponseReducerRenderView = ({ staticRoot, staticRoute }) => {
+const createResponderRenderView = ({ staticRoot, staticRoute }) => {
   const renderKeyMap = {
     'default': renderDefault,
     'home': renderHome,
@@ -19,25 +19,25 @@ const createResponseReducerRenderView = ({ staticRoot, staticRoute }) => {
     'static-file-list': renderStaticFileList.bind(null, staticRoot, staticRoute)
   }
 
-  return createResponseReducerBufferCache({
+  return createResponderBufferCache({
     getKey: (store) => {
       let { viewKey } = store.getState()
       if (renderKeyMap[ viewKey ] === undefined) {
         viewKey = 'default'
         store.setState({ viewKey })
       }
-      __DEV__ && console.log(`[responseReducerRenderView] getKey ${viewKey}`)
+      __DEV__ && console.log(`[responderRenderView] getKey ${viewKey}`)
       return viewKey
     },
     getBufferData: async (store, viewKey) => {
-      __DEV__ && console.log(`[responseReducerRenderView] render ${viewKey}`)
+      __DEV__ && console.log(`[responderRenderView] render ${viewKey}`)
       const buffer = Buffer.from(await renderKeyMap[ viewKey ]())
-      __DEV__ && console.log(`[responseReducerRenderView] rendered ${viewKey} ${Format.binary(buffer.length)}B`)
+      __DEV__ && console.log(`[responderRenderView] rendered ${viewKey} ${Format.binary(buffer.length)}B`)
       return { buffer, length: buffer.length, type: 'text/html' }
     }
   })
 }
 
 export {
-  createResponseReducerRenderView
+  createResponderRenderView
 }

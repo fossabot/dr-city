@@ -1,7 +1,2 @@
-export {
-  initFirebaseAdmin,
-  responseReducerAuthVerifyToken
-} from './auth'
-export {
-  applyWebSocketServer
-} from './webSocket'
+export { initFirebaseAdmin, responderAuthVerifyToken } from './auth'
+export { applyWebSocketServer } from './webSocket'

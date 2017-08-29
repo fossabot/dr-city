@@ -1,8 +1,8 @@
 import nodeModuleFs from 'fs'
 import { promisify } from 'util'
 import { Common, Node } from 'dr-js/library/Dr.node'
-import { initFirebaseAdmin, responseReducerAuthVerifyToken, applyWebSocketServer } from './Responder'
-import { responseReducerRenderView } from './View'
+import { initFirebaseAdmin, responderAuthVerifyToken, applyWebSocketServer } from './Responder'
+import { createResponderRenderView } from './View'
 import { createStatisticLogger } from './Task/saveStatistics'
 
 const readFileAsync = promisify(nodeModuleFs.readFile)
@@ -12,20 +12,15 @@ const {
   System: { addProcessExitListener },
   Server: {
     createServer,
-    applyResponseReducerList,
-    ResponseReducer: {
+    createRequestListener,
+    Responder: {
       createRouterMapBuilder,
-      createResponseReducerRouter,
-      createResponseReducerParseURL,
-      createResponseReducerServeStatic,
-      createResponseReducerLogRequestHeader,
-      // createResponseReducerLogTimeStep,
-      createResponseReducerLogEnd
-    },
-    WebSocket: {
-      WEB_SOCKET_EVENT_MAP,
-      DATA_TYPE_MAP,
-      enableWebSocketServer
+      createResponderRouter,
+      createResponderParseURL,
+      createResponderServeStatic,
+      createResponderLogRequestHeader,
+      // createResponderLogTimeStep,
+      createResponderLogEnd
     }
   }
 } = Node
@@ -49,31 +44,36 @@ const configureServer = async ({ protocol, hostName, port, fileSSLKey, fileSSLCe
     endSaveLog()
   })
 
-  const responseReducerServeStatic = wrapSetCacheControl(createResponseReducerServeStatic({ staticRoot: pathResource }))
+  const responderRenderView = createResponderRenderView({ staticRoot: pathResource, staticRoute: '/static' })
+  const responderServeStatic = wrapSetCacheControl(createResponderServeStatic({ staticRoot: pathResource }))
   const routeProcessorFavicon = (store) => {
     store.setState({ filePath: 'favicon.ico' })
-    return responseReducerServeStatic(store)
+    return responderServeStatic(store)
   }
 
   // set router
   const routerMapBuilder = createRouterMapBuilder()
   routerMapBuilder.addRoute('/', 'GET', (store) => {
     store.setState({ viewKey: 'home' })
-    return responseReducerRenderView(store)
+    return responderRenderView(store)
   })
   routerMapBuilder.addRoute('/favicon', 'GET', routeProcessorFavicon)
   routerMapBuilder.addRoute('/favicon.ico', 'GET', routeProcessorFavicon)
   routerMapBuilder.addRoute('/static/*', 'GET', (store) => {
     store.setState({ filePath: store.getState().paramMap[ routerMapBuilder.ROUTE_ANY ] })
-    return responseReducerServeStatic(store)
+    return responderServeStatic(store)
   })
-  routerMapBuilder.addRoute('/auth/check', 'GET', (store) => responseReducerAuthVerifyToken(store, firebaseAdminApp).then((store) => {
-    store.response.write(`verified user: ${JSON.stringify(store.getState().user)}`)
-    return store
-  }))
   routerMapBuilder.addRoute('/view/*', 'GET', (store) => {
     store.setState({ viewKey: store.getState().paramMap[ routerMapBuilder.ROUTE_ANY ] })
-    return responseReducerRenderView(store)
+    return responderRenderView(store)
+  })
+  routerMapBuilder.addRoute('/auth/*', 'GET', async (store) => {
+    await responderAuthVerifyToken(store, firebaseAdminApp, store.request.headers[ 'auth-token' ])
+    store.response.write(`verified user: ${JSON.stringify(store.getState().user)}`)
+  })
+  routerMapBuilder.addRoute('/auth-check', 'GET', async (store) => {
+    await responderAuthVerifyToken(store, firebaseAdminApp, store.request.headers[ 'auth-token' ])
+    store.response.write(`verified user: ${JSON.stringify(store.getState().user)}`)
   })
 
   // create server
@@ -86,22 +86,24 @@ const configureServer = async ({ protocol, hostName, port, fileSSLKey, fileSSLCe
     dhparam: fileSSLDHParam ? await readFileAsync(fileSSLDHParam) : null // Diffie-Hellman Key Exchange
   }, protocol)
 
-  applyResponseReducerList(server, [
-    createResponseReducerLogRequestHeader((data) => logStatistic(`[REQUEST] ${data.method} ${data.host} ${data.url} ${data.remoteAddress} ${data.remotePort} ${data.userAgent}`)),
-    createResponseReducerParseURL(),
-    // createResponseReducerLogTimeStep((stepTime) => logStatistic(`[STEP] ${Format.time(stepTime)}`)),
-    protocol === 'HTTPS'
-      ? wrapSetHSTS(createResponseReducerRouter(routerMapBuilder.getRouterMap()))
-      : createResponseReducerRouter(routerMapBuilder.getRouterMap()),
-    createResponseReducerLogEnd((data, state) => logStatistic(
-      !state.error
-        ? `[END] ${Format.time(data.duration)} ${data.statusCode}`
-        : `[ERROR] ${Format.time(data.duration)} ${data.statusCode} ${data.error} ${data.finished}`
-    ))
-  ])
+  server.on('request', createRequestListener({
+    responderList: [
+      createResponderLogRequestHeader((data) => logStatistic(`[REQUEST] ${data.method} ${data.host} ${data.url} ${data.remoteAddress} ${data.remotePort} ${data.userAgent}`)),
+      createResponderParseURL(),
+      // createResponderLogTimeStep((stepTime) => logStatistic(`[STEP] ${Format.time(stepTime)}`)),
+      protocol === 'HTTPS'
+        ? wrapSetHSTS(createResponderRouter(routerMapBuilder.getRouterMap()))
+        : createResponderRouter(routerMapBuilder.getRouterMap()),
+      createResponderLogEnd((data, state) => logStatistic(
+        !state.error
+          ? `[END] ${Format.time(data.duration)} ${data.statusCode}`
+          : `[ERROR] ${Format.time(data.duration)} ${data.statusCode} ${data.error} ${data.finished}`
+      ))
+    ]
+  }))
 
   // enable websocket
-  applyWebSocketServer(server)
+  applyWebSocketServer(server, firebaseAdminApp)
 
   return { server, start }
 }
