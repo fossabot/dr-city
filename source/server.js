@@ -14,6 +14,7 @@ const {
     createServer,
     createRequestListener,
     Responder: {
+      responderEnd,
       createRouterMapBuilder,
       createResponderRouter,
       createResponderParseURL,
@@ -38,13 +39,14 @@ const wrapSetCacheControl = (next) => (store) => {
 const configureServer = async ({ protocol, hostName, port, fileSSLKey, fileSSLCert, fileSSLChain, fileSSLDHParam, fileFirebaseAdminToken, pathResource, pathLog, logFilePrefix }) => {
   const firebaseAdminApp = initFirebaseAdmin(JSON.parse(await readFileAsync(fileFirebaseAdminToken, 'utf8')))
 
-  const { log: logStatistic, endSaveLog } = createStatisticLogger({ logRoot: pathLog, logFilePrefix })
+  const { logStatistic, endStatistic } = await createStatisticLogger({ logRoot: pathLog, logFilePrefix })
   addProcessExitListener((exitState) => {
     __DEV__ && console.log('onExit', exitState)
-    endSaveLog()
+    endStatistic()
   })
 
-  const responderRenderView = createResponderRenderView({ staticRoot: pathResource, staticRoute: '/static' })
+  const responderLogEnd = createResponderLogEnd((data, state) => logStatistic(`${state.time} [END] ${Format.time(data.duration)} ${data.statusCode}${state.error ? ` [ERROR] ${data.finished ? 'finished' : 'not-finished'} ${state.error}` : ''}`))
+  const responderRenderView = createResponderRenderView({ route: '/view', staticRoot: pathResource, staticRoute: '/static' })
   const responderServeStatic = wrapSetCacheControl(createResponderServeStatic({ staticRoot: pathResource }))
   const routeProcessorFavicon = (store) => {
     store.setState({ filePath: 'favicon.ico' })
@@ -88,18 +90,17 @@ const configureServer = async ({ protocol, hostName, port, fileSSLKey, fileSSLCe
 
   server.on('request', createRequestListener({
     responderList: [
-      createResponderLogRequestHeader((data) => logStatistic(`[REQUEST] ${data.method} ${data.host} ${data.url} ${data.remoteAddress} ${data.remotePort} ${data.userAgent}`)),
+      createResponderLogRequestHeader((data, state) => logStatistic(`${state.time} [REQUEST] ${data.method} ${data.host} ${data.url} ${data.remoteAddress} ${data.remotePort} ${data.userAgent}`)),
       createResponderParseURL(),
-      // createResponderLogTimeStep((stepTime) => logStatistic(`[STEP] ${Format.time(stepTime)}`)),
+      // createResponderLogTimeStep((stepTime, state) => logStatistic(`${state.time} [STEP] ${Format.time(stepTime)}`)),
       protocol === 'HTTPS'
         ? wrapSetHSTS(createResponderRouter(routerMapBuilder.getRouterMap()))
-        : createResponderRouter(routerMapBuilder.getRouterMap()),
-      createResponderLogEnd((data, state) => logStatistic(
-        !state.error
-          ? `[END] ${Format.time(data.duration)} ${data.statusCode}`
-          : `[ERROR] ${Format.time(data.duration)} ${data.statusCode} ${data.error} ${data.finished}`
-      ))
-    ]
+        : createResponderRouter(routerMapBuilder.getRouterMap())
+    ],
+    responderEnd: async (store) => {
+      await responderEnd(store)
+      await responderLogEnd(store)
+    }
   }))
 
   // enable websocket

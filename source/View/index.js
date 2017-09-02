@@ -9,20 +9,19 @@ import { renderStaticFileList } from './staticFileList'
 const { Format } = Common
 const { createResponderBufferCache } = Node.Server.Responder
 
-const createResponderRenderView = ({ staticRoot, staticRoute }) => {
-  const renderKeyMap = {
-    'default': renderDefault,
-    'home': renderHome,
-    'auth': renderAuth,
-    'websocket': renderWebSocket,
-    'server-status': renderServerStatus,
-    'static-file-list': renderStaticFileList.bind(null, staticRoot, staticRoute)
-  }
+const createResponderRenderView = ({ route, staticRoot, staticRoute }) => {
+  const renderKeyMap = new Map()
+  renderKeyMap.set('server-status', renderServerStatus)
+  renderKeyMap.set('static-file-list', renderStaticFileList.bind(null, staticRoot, staticRoute))
+  renderKeyMap.set('test-auth', renderAuth)
+  renderKeyMap.set('test-websocket', renderWebSocket)
+  renderKeyMap.set('home', renderHome.bind(null, route, Array.from(renderKeyMap.keys())))
+  renderKeyMap.set('default', renderDefault)
 
   return createResponderBufferCache({
     getKey: (store) => {
       let { viewKey } = store.getState()
-      if (renderKeyMap[ viewKey ] === undefined) {
+      if (!renderKeyMap.has(viewKey)) {
         viewKey = 'default'
         store.setState({ viewKey })
       }
@@ -31,7 +30,7 @@ const createResponderRenderView = ({ staticRoot, staticRoute }) => {
     },
     getBufferData: async (store, viewKey) => {
       __DEV__ && console.log(`[responderRenderView] render ${viewKey}`)
-      const buffer = Buffer.from(await renderKeyMap[ viewKey ]())
+      const buffer = Buffer.from(await renderKeyMap.get(viewKey)())
       __DEV__ && console.log(`[responderRenderView] rendered ${viewKey} ${Format.binary(buffer.length)}B`)
       return { buffer, length: buffer.length, type: 'text/html' }
     }

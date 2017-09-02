@@ -1,74 +1,39 @@
 import nodeModulePath from 'path'
-import nodeModuleFs from 'fs'
-import { Common } from 'dr-js/library/Dr.node'
+import { Common, Node } from 'dr-js/library/Dr.node'
 
 const { getRandomId } = Common.Math
+const { File: { createDirectory }, Module: { createLogger } } = Node
 
 const DEFAULT_LOG_LENGTH_THRESHOLD = __DEV__ ? 10 : 1024
-const DEFAULT_ON_ERROR = (error) => {
-  console.warn(error)
-  throw error
-}
+const LOG_FILE_SPLIT_INTERVAL = __DEV__ ? 60 * 1000 : 24 * 60 * 60 * 1000 // 24hour, 1min in debug
 
-const createStatisticLogger = ({
+const createStatisticLogger = async ({
   logRoot,
   logFilePrefix = '',
-  logLengthThreshold = DEFAULT_LOG_LENGTH_THRESHOLD,
-  onError = DEFAULT_ON_ERROR
+  logLengthThreshold = DEFAULT_LOG_LENGTH_THRESHOLD
 }) => {
-  if (!nodeModuleFs.existsSync(logRoot)) nodeModuleFs.mkdirSync(logRoot)
-  else if (!nodeModuleFs.statSync(logRoot).isDirectory()) throw new Error(`[createStatisticLogger] non-directory at ${logRoot}`)
+  await createDirectory(logRoot)
 
-  const logFileName = `${logFilePrefix}${getRandomId()}.log`
-  const logStream = nodeModuleFs.createWriteStream(nodeModulePath.join(logRoot, logFileName), { flags: 'a' })
-  logStream.on('error', onError)
-
-  let logQueue = []
-  const writeSet = new Set()
-
-  const log = (logString) => {
-    logString = `[${(new Date()).toISOString()}] ${logString}`
-    __DEV__ && console.log('[StatisticLogger] log', logString)
-    logString && logQueue.push(logString)
-    logQueue.length > logLengthThreshold && saveLog()
+  const resetLogger = () => {
+    logger && logger.end()
+    logger = createLogger({ logFilePath: nodeModulePath.join(logRoot, `${logFilePrefix}${getRandomId()}.log`), logLengthThreshold })
   }
-
-  const saveLog = () => {
-    if (logQueue.length === 0) return
-    __DEV__ && console.log('[StatisticLogger] saveLog')
-    const saveLogQueue = logQueue
-    logQueue = []
-    saveLogQueue.push('') // for an extra '\n'
-    const writeString = saveLogQueue.join('\n')
-    writeSet.add(writeString)
-    logStream.write(writeString, () => {
-      writeSet.delete(writeString)
-      __DEV__ && console.log('[StatisticLogger] saveLog finished')
-    })
-  }
-
-  const endSaveLog = () => {
-    __DEV__ && console.log('[StatisticLogger] endSaveLog')
-
-    logStream.end() // TODO: should flush
-
-    if (logQueue.length !== 0) {
-      const saveLogQueue = logQueue
-      saveLogQueue.push('') // for an extra '\n'
-      const writeString = saveLogQueue.join('\n')
-      writeSet.add(writeString)
-    }
-
-    if (writeSet.size !== 0) nodeModuleFs.appendFileSync(nodeModulePath.join(logRoot, logFileName), Array.from(writeSet).join(''))
-  }
+  let logger = null
+  let token = setInterval(resetLogger, LOG_FILE_SPLIT_INTERVAL)
+  resetLogger()
 
   return {
-    log,
-    saveLog,
-    endSaveLog
+    logStatistic: (...args) => {
+      __DEV__ && console.log(...args)
+      logger && logger.log(...args)
+    },
+    endStatistic: () => {
+      token && clearInterval(token)
+      token = null
+      logger && logger.end()
+      logger = null
+    }
   }
 }
 
-export {
-  createStatisticLogger
-}
+export { createStatisticLogger }
