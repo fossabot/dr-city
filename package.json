@@ -1,6 +1,6 @@
 {
   "name": "dr-city",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "author": "dr-js",
   "license": "MIT",
   "description": "Server of Dr.city",
@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "dev-dep-web": "^0.0.1",
-    "dr-js": "^0.1.1",
+    "dr-js": "^0.1.2",
     "firebase-admin": "^5.2.1"
   }
 }

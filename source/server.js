@@ -7,7 +7,7 @@ import { createStatisticLogger } from './Task/saveStatistics'
 
 const readFileAsync = promisify(nodeModuleFs.readFile)
 
-const { Format } = Common
+const { Format, Time: { clock } } = Common
 const {
   System: { addProcessExitListener },
   Server: {
@@ -42,6 +42,7 @@ const configureServer = async ({ protocol, hostName, port, fileSSLKey, fileSSLCe
   const { logStatistic, endStatistic } = await createStatisticLogger({ logRoot: pathLog, logFilePrefix })
   addProcessExitListener((exitState) => {
     __DEV__ && console.log('onExit', exitState)
+    logStatistic(`${clock()} [SERVER DOWN] exitState: ${JSON.stringify(exitState)}`)
     endStatistic()
   })
 
@@ -105,6 +106,8 @@ const configureServer = async ({ protocol, hostName, port, fileSSLKey, fileSSLCe
 
   // enable websocket
   applyWebSocketServer(server, firebaseAdminApp)
+
+  logStatistic(`${clock()} [SERVER UP] server config: ${JSON.stringify({ hostName, port })}`)
 
   return { server, start }
 }

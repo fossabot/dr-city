@@ -7,6 +7,7 @@ import { renderServerStatus } from './serverStatus'
 import { renderStaticFileList } from './staticFileList'
 
 const { Format } = Common
+const { getEntityTagByContentHash } = Node.Module
 const { createResponderBufferCache } = Node.Server.Responder
 
 const createResponderRenderView = ({ route, staticRoot, staticRoute }) => {
@@ -32,7 +33,7 @@ const createResponderRenderView = ({ route, staticRoot, staticRoute }) => {
       __DEV__ && console.log(`[responderRenderView] render ${viewKey}`)
       const buffer = Buffer.from(await renderKeyMap.get(viewKey)())
       __DEV__ && console.log(`[responderRenderView] rendered ${viewKey} ${Format.binary(buffer.length)}B`)
-      return { buffer, length: buffer.length, type: 'text/html' }
+      return { buffer, length: buffer.length, type: 'text/html', entityTag: getEntityTagByContentHash(buffer) }
     }
   })
 }
