@@ -1,7 +1,9 @@
 # source files
 /.*
 /*.tgz
+/library/*.map
 /config
 /source
 /example
+/pack
 /stats.json

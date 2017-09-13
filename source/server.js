@@ -7,7 +7,7 @@ import { createStatisticLogger } from './Task/saveStatistics'
 
 const readFileAsync = promisify(nodeModuleFs.readFile)
 
-const { Format, Time: { clock } } = Common
+const { Format, Time: { clock }, Data: { CacheMap } } = Common
 const {
   System: { addProcessExitListener },
   Server: {
@@ -26,17 +26,20 @@ const {
   }
 } = Node
 
+const CACHE_BUFFER_SIZE_SUM_MAX = 32 * 1024 * 1024 // in byte, 32mB
+
 const wrapSetHSTS = (next) => (store) => {
   store.response.setHeader('strict-transport-security', 'max-age=31536000; includeSubDomains; preload')
   return next(store)
 }
 
 const wrapSetCacheControl = (next) => (store) => {
-  store.response.setHeader('cache-control', 'public, max-age=3600') // in seconds, 1h
+  store.response.setHeader('cache-control', __DEV__ ? 'no-cache' : 'public, max-age=2592000') // in seconds, 30days = 2592000 = 30 * 24 * 60 * 60
   return next(store)
 }
 
-const configureServer = async ({ protocol, hostName, port, fileSSLKey, fileSSLCert, fileSSLChain, fileSSLDHParam, fileFirebaseAdminToken, pathResource, pathLog, logFilePrefix }) => {
+const configureServer = async ({ protocol, hostName, port, fileSSLKey, fileSSLCert, fileSSLChain, fileSSLDHParam, filePackManifest, fileFirebaseAdminToken, pathResource, pathLog, logFilePrefix }) => {
+  const packManifestMap = JSON.parse(await readFileAsync(filePackManifest, 'utf8'))
   const firebaseAdminApp = initFirebaseAdmin(JSON.parse(await readFileAsync(fileFirebaseAdminToken, 'utf8')))
 
   const { logStatistic, endStatistic } = await createStatisticLogger({ logRoot: pathLog, logFilePrefix })
@@ -46,11 +49,32 @@ const configureServer = async ({ protocol, hostName, port, fileSSLKey, fileSSLCe
     endStatistic()
   })
 
-  const responderLogEnd = createResponderLogEnd((data, state) => logStatistic(`${state.time} [END] ${Format.time(data.duration)} ${data.statusCode}${state.error ? ` [ERROR] ${data.finished ? 'finished' : 'not-finished'} ${state.error}` : ''}`))
-  const responderRenderView = createResponderRenderView({ route: '/view', staticRoot: pathResource, staticRoute: '/static' })
-  const responderServeStatic = wrapSetCacheControl(createResponderServeStatic({ staticRoot: pathResource }))
+  const serveCacheMap = new CacheMap({
+    valueSizeSumMax: CACHE_BUFFER_SIZE_SUM_MAX,
+    onCacheAdd: __DEV__ ? (cache) => console.log('[onCacheAdd]', cache.key) : null,
+    onCacheDelete: __DEV__ ? (cache) => console.log('[onCacheDelete]', cache.key) : null
+  })
+
+  const responderLogEnd = createResponderLogEnd((data, state) => {
+    __DEV__ && state.error && console.error(state.error)
+    const errorLog = state.error ? ` [ERROR] ${data.finished ? 'finished' : 'not-finished'} ${state.error}` : ''
+    logStatistic(`${state.time} [END] ${Format.time(data.duration)} ${data.statusCode}${errorLog}`)
+  })
+  const responderRenderView = createResponderRenderView({
+    getStatic: (path) => `/r/static/${path}`,
+    getPackScript: (name) => {
+      const manifestScriptName = packManifestMap[ name ]
+      if (!manifestScriptName) throw new Error(`[Error] missing manifest script: ${name}`)
+      return `<script src="/r/pack/${manifestScriptName}"></script>`
+    },
+    route: '/v',
+    staticRoot: `${pathResource}/static`,
+    staticRoutePrefix: '/r/static',
+    serveCacheMap
+  })
+  const responderServeStatic = wrapSetCacheControl(createResponderServeStatic({ staticRoot: pathResource, isEnableGzip: true, serveCacheMap }))
   const routeProcessorFavicon = (store) => {
-    store.setState({ filePath: 'favicon.ico' })
+    store.setState({ filePath: 'static/favicon.ico' })
     return responderServeStatic(store)
   }
 
@@ -62,11 +86,11 @@ const configureServer = async ({ protocol, hostName, port, fileSSLKey, fileSSLCe
   })
   routerMapBuilder.addRoute('/favicon', 'GET', routeProcessorFavicon)
   routerMapBuilder.addRoute('/favicon.ico', 'GET', routeProcessorFavicon)
-  routerMapBuilder.addRoute('/static/*', 'GET', (store) => {
+  routerMapBuilder.addRoute('/r/*', 'GET', (store) => {
     store.setState({ filePath: store.getState().paramMap[ routerMapBuilder.ROUTE_ANY ] })
     return responderServeStatic(store)
   })
-  routerMapBuilder.addRoute('/view/*', 'GET', (store) => {
+  routerMapBuilder.addRoute('/v/*', 'GET', (store) => {
     store.setState({ viewKey: store.getState().paramMap[ routerMapBuilder.ROUTE_ANY ] })
     return responderRenderView(store)
   })

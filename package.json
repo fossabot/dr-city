@@ -23,6 +23,8 @@
     "perf-webpack-stats": "cross-env NODE_ENV=production webpack --config config/library.conf.js --json > stats.json",
     "example": "cross-env NODE_ENV=development webpack --watch --config config/example.conf.js",
     "library": "cross-env NODE_ENV=production webpack --config config/library.conf.js",
+    "pack-example": "cross-env NODE_ENV=development webpack --watch --config pack/config/example.conf.js",
+    "pack-library": "cross-env NODE_ENV=production webpack --config pack/config/library.conf.js",
     "build": "npm run library",
     "prepare": "npm run build"
   },
@@ -31,8 +33,12 @@
     "npm": "5.x"
   },
   "devDependencies": {
-    "dev-dep-web": "^0.0.1",
-    "dr-js": "^0.1.2",
-    "firebase-admin": "^5.2.1"
+    "dev-dep-web-react": "^0.0.2",
+    "dr-js": "^0.2.2",
+    "firebase": "^4.3.1",
+    "firebase-admin": "^5.2.1",
+    "prop-types": "^15.5.10",
+    "react": "^15.6.1",
+    "react-dom": "^15.6.1"
   }
 }

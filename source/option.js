@@ -25,14 +25,15 @@ const OPTION_CONFIG = {
     },
     { name: 'host-name', shortName: 'h', ...OPTION_CONFIG_PRESET.SingleString },
     { name: 'port', shortName: 'p', ...OPTION_CONFIG_PRESET.SingleInteger },
-    { name: 'path-log', optional: true, ...OPTION_CONFIG_PRESET.SingleString },
-    { name: 'prefix-log-file', optional: true, ...OPTION_CONFIG_PRESET.SingleString },
-    { name: 'path-resource', optional: true, ...OPTION_CONFIG_PRESET.SingleString },
     { name: 'file-SSL-key', optional: true, ...OPTION_CONFIG_PRESET.SingleString },
     { name: 'file-SSL-cert', optional: true, ...OPTION_CONFIG_PRESET.SingleString },
     { name: 'file-SSL-chain', optional: true, ...OPTION_CONFIG_PRESET.SingleString },
     { name: 'file-SSL-dhparam', optional: true, ...OPTION_CONFIG_PRESET.SingleString },
-    { name: 'file-firebase-admin-token', optional: true, ...OPTION_CONFIG_PRESET.SingleString }
+    { name: 'file-pack-manifest', ...OPTION_CONFIG_PRESET.SingleString },
+    { name: 'file-firebase-admin-token', ...OPTION_CONFIG_PRESET.SingleString },
+    { name: 'path-log', ...OPTION_CONFIG_PRESET.SingleString },
+    { name: 'prefix-log-file', ...OPTION_CONFIG_PRESET.SingleString },
+    { name: 'path-resource', ...OPTION_CONFIG_PRESET.SingleString }
   ]
 }
 

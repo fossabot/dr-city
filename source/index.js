@@ -38,10 +38,13 @@ const main = async () => {
       protocol,
       hostName: getOption('host-name'),
       port: getOption('port'),
-      fileSSLKey: protocol === 'HTTPS' ? getOption('file-SSL-key') : null,
-      fileSSLCert: protocol === 'HTTPS' ? getOption('file-SSL-cert') : null,
-      fileSSLChain: protocol === 'HTTPS' ? getOption('file-SSL-chain') : null,
-      fileSSLDHParam: protocol === 'HTTPS' ? getOption('file-SSL-dhparam') : null,
+      ...(protocol === 'HTTPS' ? {
+        fileSSLKey: getOption('file-SSL-key'),
+        fileSSLCert: getOption('file-SSL-cert'),
+        fileSSLChain: getOption('file-SSL-chain'),
+        fileSSLDHParam: getOption('file-SSL-dhparam')
+      } : {}),
+      filePackManifest: getOption('file-pack-manifest'),
       fileFirebaseAdminToken: getOption('file-firebase-admin-token'),
       pathResource: nodeModulePath.resolve(pathRelative, getOption('path-resource')),
       pathLog: nodeModulePath.resolve(pathRelative, getOption('path-log')),

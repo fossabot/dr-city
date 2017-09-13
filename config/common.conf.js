@@ -1,9 +1,10 @@
 const nodeModulePath = require('path')
 const webpack = require('webpack')
+const MinifyPlugin = require('babel-minify-webpack-plugin')
 const { DefinePlugin, BannerPlugin, optimize: { ModuleConcatenationPlugin } } = webpack
 
 const NODE_ENV = process.env.NODE_ENV
-const PRODUCTION = NODE_ENV === 'production'
+const IS_PRODUCTION = NODE_ENV === 'production'
 
 const BABEL_OPTIONS = {
   babelrc: false,
@@ -12,28 +13,25 @@ const BABEL_OPTIONS = {
 }
 
 module.exports = {
-  // entry: {},
+  entry: { 'index': 'source/index' },
+  resolve: { alias: { source: nodeModulePath.resolve(__dirname, '../source') } },
   target: 'node', // support node main modules like 'fs'
   module: {
-    rules: [
-      {
-        test: /\.js$/,
-        exclude: /node_modules/,
-        use: { loader: 'babel-loader', options: BABEL_OPTIONS }
-      }
-    ]
+    rules: [ {
+      test: /\.js$/,
+      exclude: /node_modules/,
+      use: { loader: 'babel-loader', options: BABEL_OPTIONS }
+    } ]
   },
-  resolve: {
-    alias: { source: nodeModulePath.resolve(__dirname, '../source') }
-  },
-  plugins: [].concat(
+  plugins: [
     new DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(NODE_ENV),
-      '__DEV__': !PRODUCTION
+      '__DEV__': !IS_PRODUCTION
     }),
-    PRODUCTION ? [
+    ...(IS_PRODUCTION ? [
       new ModuleConcatenationPlugin(),
+      new MinifyPlugin(),
       new BannerPlugin({ banner: '/* eslint-disable */', raw: true, test: /\.js$/, entryOnly: false })
-    ] : []
-  )
+    ] : [])
+  ]
 }

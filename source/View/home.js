@@ -1,20 +1,16 @@
-import { Common } from 'dr-js/library/Dr.node'
-import { DOCTYPE_HTML, COMMON_HEAD_CONTENT, STYLE_RESET } from './__utils__'
+import { DOCTYPE_HTML, COMMON_HEAD_CONTENT, STYLE_RESET, STYLE_TAG_LINK, renderTagLink } from './__utils__'
 
-const { escapeHTML } = Common.Format
-
-export const renderHome = (route, viewKeyList) => `${DOCTYPE_HTML}
+export const renderHome = (data) => `${DOCTYPE_HTML}
 <html lang="en">
 <head>
-  ${COMMON_HEAD_CONTENT}
-  ${STYLE_RESET}
-  <style>#root { width: 100%; height: 100%; overflow: auto; }</style>
+  ${COMMON_HEAD_CONTENT(data)}
+  ${STYLE_RESET(data)}
+  ${STYLE_TAG_LINK(data)}
   <title>Dr.City</title>
 </head>
-<body>
-<div id="root">
-  <p>Server is Online, good news!</p>
-  ${viewKeyList.map((viewKey) => `<p><a href="${route}/${viewKey}">${escapeHTML(viewKey)}</a></p>`).join('\n')}
-</div>
+<body style="width: 100%; height: 100%; overflow: auto;">
+${data.viewKeyList.map((viewKey) => renderTagLink(getTagText(viewKey), `${data.route}/${viewKey}`, viewKey)).join('\n')}
 </body>
 </html>`
+
+const getTagText = (viewKey) => viewKey.split('-').reduce((o, v) => o + v[ 0 ], '').toUpperCase()
