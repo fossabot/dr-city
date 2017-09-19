@@ -1,16 +1,19 @@
-import { DOCTYPE_HTML, COMMON_HEAD_CONTENT, STYLE_RESET, STYLE_TAG_LINK, renderTagLink } from './__utils__'
+import { DOCTYPE_HTML, COMMON_HEAD_CONTENT, STYLE_RESET } from './__utils__'
 
 export const renderHome = (data) => `${DOCTYPE_HTML}
 <html lang="en">
 <head>
   ${COMMON_HEAD_CONTENT(data)}
   ${STYLE_RESET(data)}
-  ${STYLE_TAG_LINK(data)}
+  <link rel="stylesheet" href="${data.getStatic('material/index.css')}" />
+  <link rel="stylesheet" href="${data.getPack('home.css')}" />
   <title>Dr.City</title>
 </head>
-<body style="width: 100%; height: 100%; overflow: auto;">
-${data.viewKeyList.map((viewKey) => renderTagLink(getTagText(viewKey), `${data.route}/${viewKey}`, viewKey)).join('\n')}
+<body>
+<div id="root" style="width: 100%; height: 100%; overflow: auto;">This should be replaced with React soon...</div>
+<script src="${data.getPack('runtime.js')}"></script>
+<script src="${data.getPack('vendor.js')}"></script>
+<script src="${data.getPack('home.js')}"></script>
+<script>window.main(document.getElementById('root'))</script>
 </body>
 </html>`
-
-const getTagText = (viewKey) => viewKey.split('-').reduce((o, v) => o + v[ 0 ], '').toUpperCase()

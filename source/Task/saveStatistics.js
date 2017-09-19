@@ -1,17 +1,15 @@
 import nodeModulePath from 'path'
-import { Common, Node } from 'dr-js/library/Dr.node'
+import { Common, Node } from 'dr-js/module/Dr.node'
 
 const { getRandomId } = Common.Math
 const { File: { createDirectory }, Module: { createLogger } } = Node
 
-const DEFAULT_LOG_LENGTH_THRESHOLD = __DEV__ ? 10 : 1024
-const LOG_FILE_SPLIT_INTERVAL = __DEV__ ? 60 * 1000 : 24 * 60 * 60 * 1000 // 24hour, 1min in debug
+// const DEFAULT_LOG_LENGTH_THRESHOLD = __DEV__ ? 10 : 1024
+// const LOG_FILE_SPLIT_INTERVAL = __DEV__ ? 60 * 1000 : 24 * 60 * 60 * 1000 // 24hour, 1min in debug
+const DEFAULT_LOG_LENGTH_THRESHOLD = 1024
+const LOG_FILE_SPLIT_INTERVAL = 24 * 60 * 60 * 1000 // 24hour
 
-const createStatisticLogger = async ({
-  logRoot,
-  logFilePrefix = '',
-  logLengthThreshold = DEFAULT_LOG_LENGTH_THRESHOLD
-}) => {
+const createStatisticLogger = async ({ logRoot, logFilePrefix = '', logLengthThreshold = DEFAULT_LOG_LENGTH_THRESHOLD }) => {
   await createDirectory(logRoot)
 
   const resetLogger = () => {

@@ -1,7 +1,7 @@
 import nodeModuleFs from 'fs'
 import { promisify } from 'util'
-import { Common, Node } from 'dr-js/library/Dr.node'
-import { initFirebaseAdmin, responderAuthVerifyToken, applyWebSocketServer } from './Responder'
+import { Common, Node } from 'dr-js/module/Dr.node'
+import { initFirebaseAdminApp, responderAuthVerifyToken, applyWebSocketServer } from './Responder'
 import { createResponderRenderView } from './View'
 import { createStatisticLogger } from './Task/saveStatistics'
 
@@ -27,6 +27,7 @@ const {
 } = Node
 
 const CACHE_BUFFER_SIZE_SUM_MAX = 32 * 1024 * 1024 // in byte, 32mB
+const CACHE_EXPIRE_TIME = __DEV__ ? 0 : 60 * 1000 // in msec, 1min
 
 const wrapSetHSTS = (next) => (store) => {
   store.response.setHeader('strict-transport-security', 'max-age=31536000; includeSubDomains; preload')
@@ -40,7 +41,7 @@ const wrapSetCacheControl = (next) => (store) => {
 
 const configureServer = async ({ protocol, hostName, port, fileSSLKey, fileSSLCert, fileSSLChain, fileSSLDHParam, filePackManifest, fileFirebaseAdminToken, pathResource, pathLog, logFilePrefix }) => {
   const packManifestMap = JSON.parse(await readFileAsync(filePackManifest, 'utf8'))
-  const firebaseAdminApp = initFirebaseAdmin(JSON.parse(await readFileAsync(fileFirebaseAdminToken, 'utf8')))
+  const firebaseAdminApp = initFirebaseAdminApp(JSON.parse(await readFileAsync(fileFirebaseAdminToken, 'utf8')))
 
   const { logStatistic, endStatistic } = await createStatisticLogger({ logRoot: pathLog, logFilePrefix })
   addProcessExitListener((exitState) => {
@@ -62,17 +63,13 @@ const configureServer = async ({ protocol, hostName, port, fileSSLKey, fileSSLCe
   })
   const responderRenderView = createResponderRenderView({
     getStatic: (path) => `/r/static/${path}`,
-    getPackScript: (name) => {
-      const manifestScriptName = packManifestMap[ name ]
-      if (!manifestScriptName) throw new Error(`[Error] missing manifest script: ${name}`)
-      return `<script src="/r/pack/${manifestScriptName}"></script>`
-    },
+    getPack: (path) => `/r/pack/${packManifestMap[ path ]}`,
     route: '/v',
     staticRoot: `${pathResource}/static`,
     staticRoutePrefix: '/r/static',
     serveCacheMap
   })
-  const responderServeStatic = wrapSetCacheControl(createResponderServeStatic({ staticRoot: pathResource, isEnableGzip: true, serveCacheMap }))
+  const responderServeStatic = wrapSetCacheControl(createResponderServeStatic({ staticRoot: pathResource, isEnableGzip: true, expireTime: CACHE_EXPIRE_TIME, serveCacheMap }))
   const routeProcessorFavicon = (store) => {
     store.setState({ filePath: 'static/favicon.ico' })
     return responderServeStatic(store)

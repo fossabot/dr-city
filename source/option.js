@@ -1,4 +1,4 @@
-import { Common } from 'dr-js/library/Dr.node'
+import { Common } from 'dr-js/module/Dr.node'
 const { createOptionParser, OPTION_CONFIG_PRESET } = Common.Module
 
 const OPTION_CONFIG = {

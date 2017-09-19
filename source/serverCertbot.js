@@ -1,4 +1,4 @@
-import { Node } from 'dr-js/library/Dr.node'
+import { Node } from 'dr-js/module/Dr.node'
 
 const {
   createServer,

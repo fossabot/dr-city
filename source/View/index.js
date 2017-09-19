@@ -1,4 +1,4 @@
-import { Common, Node } from 'dr-js/library/Dr.node'
+import { Common, Node } from 'dr-js/module/Dr.node'
 import { renderDefault } from './default'
 import { renderHome } from './home'
 import { renderAuth } from './auth'
@@ -10,7 +10,9 @@ const { Format } = Common
 const { getEntityTagByContentHash } = Node.Module
 const { createResponderBufferCache } = Node.Server.Responder
 
-const createResponderRenderView = ({ getStatic, getPackScript, route, staticRoot, staticRoutePrefix, serveCacheMap }) => {
+const CACHE_EXPIRE_TIME = __DEV__ ? 0 : 60 * 1000 // in msec, 1min
+
+const createResponderRenderView = ({ getStatic, getPack, route, staticRoot, staticRoutePrefix, serveCacheMap }) => {
   const renderKeyMap = new Map()
   renderKeyMap.set('default', renderDefault)
   renderKeyMap.set('home', renderHome)
@@ -19,7 +21,7 @@ const createResponderRenderView = ({ getStatic, getPackScript, route, staticRoot
   renderKeyMap.set('test-auth', renderAuth)
   renderKeyMap.set('test-websocket', renderWebSocket)
 
-  const data = { getStatic, getPackScript, route, staticRoot, staticRoutePrefix, viewKeyList: Array.from(renderKeyMap.keys()) }
+  const data = { getStatic, getPack, route, staticRoot, staticRoutePrefix, viewKeyList: Array.from(renderKeyMap.keys()) }
 
   return createResponderBufferCache({
     getKey: (store) => {
@@ -37,6 +39,7 @@ const createResponderRenderView = ({ getStatic, getPackScript, route, staticRoot
       __DEV__ && console.log(`[responderRenderView] rendered ${viewKey} ${Format.binary(buffer.length)}B`)
       return { buffer, length: buffer.length, type: 'text/html', entityTag: getEntityTagByContentHash(buffer) }
     },
+    expireTime: CACHE_EXPIRE_TIME,
     serveCacheMap
   })
 }

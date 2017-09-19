@@ -1,4 +1,4 @@
-import { Common, Node } from 'dr-js/library/Dr.node'
+import { Common, Node } from 'dr-js/module/Dr.node'
 
 const { promiseQueue } = Common.Function
 const { runCommand } = Node.Module

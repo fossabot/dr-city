@@ -1,4 +1,4 @@
-import { Common } from 'dr-js/library/Dr.node'
+import { Common } from 'dr-js/module/Dr.node'
 import { getServerStatus } from '../Task/getServerStatus'
 import { DOCTYPE_HTML, COMMON_HEAD_CONTENT, STYLE_RESET } from './__utils__'
 

@@ -1,21 +1,13 @@
-import { Node } from 'dr-js/library/Dr.node'
+import { Node } from 'dr-js/module/Dr.node'
 import { responderAuthVerifyToken } from './auth'
 
 const {
-  packBufferPacket,
-  parseBufferPacket
-} = Node.Buffer
-const {
-  WEB_SOCKET_EVENT_MAP,
-  DATA_TYPE_MAP,
-  enableWebSocketServer,
-  createUpdateRequestListener
-} = Node.Server.WebSocket
-const {
-  createRouterMapBuilder,
-  createResponderRouter,
-  createResponderParseURL
-} = Node.Server.Responder
+  Buffer: { packBufferPacket, parseBufferPacket },
+  Server: {
+    WebSocket: { WEB_SOCKET_EVENT_MAP, DATA_TYPE_MAP, enableWebSocketServer, createUpdateRequestListener },
+    Responder: { createRouterMapBuilder, createResponderRouter, createResponderParseURL }
+  }
+} = Node
 
 // common protocol
 const enableProtocolTextJSON = (store, onData) => store.webSocket.on(WEB_SOCKET_EVENT_MAP.FRAME, (webSocket, { dataType, dataBuffer }) => {
@@ -56,7 +48,7 @@ const PROTOCOL_MAP = {
 }
 const PROTOCOL_TYPE_SET = new Set(Object.keys(PROTOCOL_MAP))
 
-const DEFAULT_FRAME_LENGTH_LIMIT = 0.5 * 1024 * 1024 // 0.5 MiB
+const DEFAULT_FRAME_LENGTH_LIMIT = 2 * 1024 * 1024 // 2 MiB
 const AUTH_FRAME_LENGTH_LIMIT = 32 * 1024 * 1024 // 32 MiB
 const REGEXP_AUTH_TOKEN = /auth-token!(.+)/
 
@@ -84,7 +76,7 @@ const applyWebSocketServer = (server, firebaseAdminApp) => {
     __DEV__ && !protocol && console.log('[responderUpdateRequest] no valid protocol', protocolList)
     __DEV__ && !authToken && console.log('[responderUpdateRequest] no valid authToken', protocolList)
     if (!protocol || !authToken) return
-    // await responderAuthVerifyToken(store, firebaseAdminApp, authToken)
+    await responderAuthVerifyToken(store, firebaseAdminApp, authToken)
     authToken && store.setState({ user: { test: 'test', authToken } })
     __DEV__ && !store.getState().user && console.log('[responderUpdateRequest] failed to verify authToken', authToken)
     if (!store.getState().user) return
@@ -109,12 +101,12 @@ const applyWebSocketServer = (server, firebaseAdminApp) => {
       if (groupSetMap[ groupPath ] === undefined) groupSetMap[ groupPath ] = new Set()
       store.groupSet = groupSetMap[ groupPath ]
       store.groupSet.add(store.webSocket)
-      console.log(`[responderUpdateRequestAuth] >> OPEN, current group: ${store.groupSet.size} (self included)`, protocol, groupPath)
+      __DEV__ && console.log(`[responderUpdateRequestAuth] >> OPEN, current group: ${store.groupSet.size} (self included)`, protocol, groupPath)
     })
     store.webSocket.on(WEB_SOCKET_EVENT_MAP.CLOSE, () => {
       store.groupSet.delete(store.webSocket)
       if (store.groupSet.size === 0) delete groupSetMap[ groupPath ]
-      console.log(`[responderUpdateRequestAuth] >> CLOSE, current group: ${store.groupSet.size} (self included)`, protocol, groupPath)
+      __DEV__ && console.log(`[responderUpdateRequestAuth] >> CLOSE, current group: ${store.groupSet.size} (self included)`, protocol, groupPath)
     })
   })
 
