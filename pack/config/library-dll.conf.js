@@ -1,3 +1,3 @@
 const nodeModulePath = require('path')
-const { getConfig } = require('./common.conf')
+const { getConfig } = require('./dll.conf')
 module.exports = getConfig({ pathOutput: nodeModulePath.resolve(__dirname, '../../library/pack') })

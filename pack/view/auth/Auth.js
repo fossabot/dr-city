@@ -26,7 +26,7 @@ class Auth extends PureComponent {
         {user.photoURL ? null : (user.displayName || '')[ 0 ].toUpperCase()}
       </Avatar>
       : <Avatar>?</Avatar>
-    return <Grid className={CSS_CARD} container align="center" justify="center">
+    return <Grid className={CSS_CARD} container justify="center">
       <Grid item xs={12} sm={6} lg={3}>
         <Card>
           <CardHeader title={isAuth ? user.displayName : blankSpan} subheader={isAuth ? user.email : blankSpan} avatar={userAvatar} />

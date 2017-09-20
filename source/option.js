@@ -29,7 +29,6 @@ const OPTION_CONFIG = {
     { name: 'file-SSL-cert', optional: true, ...OPTION_CONFIG_PRESET.SingleString },
     { name: 'file-SSL-chain', optional: true, ...OPTION_CONFIG_PRESET.SingleString },
     { name: 'file-SSL-dhparam', optional: true, ...OPTION_CONFIG_PRESET.SingleString },
-    { name: 'file-pack-manifest', ...OPTION_CONFIG_PRESET.SingleString },
     { name: 'file-firebase-admin-token', ...OPTION_CONFIG_PRESET.SingleString },
     { name: 'path-log', ...OPTION_CONFIG_PRESET.SingleString },
     { name: 'prefix-log-file', ...OPTION_CONFIG_PRESET.SingleString },

@@ -6,7 +6,7 @@ const CSS_CARD = CSS_METRICS[ 'padding-m' ]
 
 class Home extends PureComponent {
   render () {
-    return <Grid className={CSS_CARD} container align="center" justify="center">
+    return <Grid className={CSS_CARD} container justify="center">
       <Grid item xs={12} sm={6} lg={3}>
         <Card>
           <CardContent>

@@ -25,7 +25,9 @@
     "example": "cross-env NODE_ENV=development webpack --watch --config config/example.conf.js",
     "library": "cross-env NODE_ENV=production webpack --config config/library.conf.js",
     "pack-example": "cross-env NODE_ENV=development webpack --watch --config pack/config/example.conf.js",
-    "pack-library": "cross-env NODE_ENV=production webpack --config pack/config/library.conf.js",
+    "pack-example-dll": "cross-env NODE_ENV=development webpack --watch --config pack/config/example-dll.conf.js",
+    "pack-library": "cross-env NODE_ENV=production webpack --config pack/config/library.conf.js --progress=true",
+    "pack-library-dll": "cross-env NODE_ENV=production webpack --config pack/config/library-dll.conf.js --progress=true",
     "build": "npm run library",
     "prepare": "npm run build"
   },

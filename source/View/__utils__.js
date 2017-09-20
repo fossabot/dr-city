@@ -1,6 +1,3 @@
-import { Common } from 'dr-js/module/Dr.node'
-const { escapeHTML } = Common.Format
-
 const DOCTYPE_HTML = '<!DOCTYPE html>'
 
 const COMMON_HEAD_CONTENT = ({ getStatic }) => `<meta charset="utf-8">
@@ -18,23 +15,25 @@ const STYLE_RESET = () => `<style>
   ::-webkit-scrollbar, ::-webkit-scrollbar-track, ::-webkit-scrollbar-track-piece, ::-webkit-scrollbar-corner, ::-webkit-resizer { background: transparent; }
 </style>`
 
-const STYLE_TAG_LINK = () => `<style>
-  .tag-tag { display: inline-block; overflow: hidden; margin-right: 2px; flex: 0 0 16px; width: 16px; height: 16px; font-size: 8px; line-height: 8px; word-break: break-all; color: #000; }
-  .tag-link { display: flex; flex-flow: row; align-items: center; margin: 2px 4px 0; font-size: 12px; }
-</style>`
-const textToHue = (text) => {
-  let hue = 0
-  for (let index = 0, indexMax = text.length; index < indexMax; index++) hue += Math.pow(text.charCodeAt(index), 4)
-  return hue % 360
-}
-const cachedTagMap = {}
-const getTag = (tagText) => (cachedTagMap[ tagText ] || (cachedTagMap[ tagText ] = `<b class="tag-tag" style="background: hsl(${textToHue(tagText)}, 100%, 80%)">${escapeHTML(tagText)}</b>`))
-const renderTagLink = (tagText, linkUri, linkText) => `<p class="tag-link">${getTag(tagText)}<a href="${linkUri}">${escapeHTML(linkText || linkUri)}</a></p>`
+const getRender = ({ title, packScriptList, packStyleList }) => (data) => `${DOCTYPE_HTML}
+<html lang="en">
+<head>
+  ${COMMON_HEAD_CONTENT(data)}
+  ${STYLE_RESET(data)}
+  <link rel="stylesheet" href="${data.getStatic('material/index.css')}" />
+  ${packStyleList.map((packStyle) => `<link rel="stylesheet" href="${data.getPack(packStyle)}" />`).join('\n')}
+  <title>${title}</title>
+</head>
+<body>
+<div id="root" style="width: 100%; height: 100%; overflow: auto;">This should be replaced with React soon...</div>
+${packScriptList.map((packScript) => `<script src="${data.getPack(packScript)}"></script>`).join('\n')}
+<script>window.main(document.getElementById('root'))</script>
+</body>
+</html>`
 
 export {
   DOCTYPE_HTML,
   COMMON_HEAD_CONTENT,
   STYLE_RESET,
-  STYLE_TAG_LINK,
-  renderTagLink
+  getRender
 }

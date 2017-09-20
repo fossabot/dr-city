@@ -4,7 +4,8 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin')
 const ManifestPlugin = require('webpack-manifest-plugin')
 const CompressionPlugin = require('compression-webpack-plugin')
 const MinifyPlugin = require('babel-minify-webpack-plugin')
-const { HashedModuleIdsPlugin, DefinePlugin, BannerPlugin, optimize: { CommonsChunkPlugin, ModuleConcatenationPlugin } } = webpack
+const { DLL_NAME_MAP } = require('./dll.conf')
+const { HashedModuleIdsPlugin, DefinePlugin, BannerPlugin, DllReferencePlugin, optimize: { CommonsChunkPlugin, ModuleConcatenationPlugin } } = webpack
 
 const NODE_ENV = process.env.NODE_ENV
 const IS_PRODUCTION = NODE_ENV === 'production'
@@ -18,22 +19,18 @@ const OPTIONS = {
     : { importLoaders: 1, localIdentName: '[name]_[local]_[hash:base64:5]' },
   POSTCSS_LOADER: { plugins: () => [ require('postcss-cssnext') ] }
 }
-module.exports = {
+
+const getConfig = ({ pathOutput }) => ({
   entry: {
-    'vendor': [
-      'dr-js/module/Dr.browser',
-      'react',
-      'react-dom',
-      'prop-types',
-      'material-ui'
-    ],
-    'vendor-firebase': [ // TODO: minification error: https://github.com/firebase/firebase-js-sdk/issues/154
-      'firebase/app',
-      'firebase/auth'
-    ],
     'home': 'view/home',
+    'status': 'view/status',
+    'file': 'view/file',
     'auth': 'view/auth',
     'websocket': 'view/websocket'
+  },
+  output: {
+    path: pathOutput,
+    filename: IS_PRODUCTION ? '[name]-[chunkhash:8].js' : '[name].js'
   },
   resolve: {
     alias: {
@@ -52,25 +49,28 @@ module.exports = {
       use: ExtractTextPlugin.extract({ use: [ { loader: 'css-loader', options: OPTIONS.CSS_LOADER }, { loader: 'postcss-loader', options: OPTIONS.POSTCSS_LOADER } ] })
     }, {
       exclude: [ /\.js$/, /\.pcss$/, /\.json$/ ],
-      use: [ { loader: 'file-loader', options: { name: IS_PRODUCTION ? '../static/[name].[hash].[ext]' : '../static/[name].[ext]' } } ]
+      use: [ { loader: 'file-loader', options: { name: IS_PRODUCTION ? '../static/[name]-[hash].[ext]' : '../static/[name].[ext]' } } ]
     } ]
   },
   plugins: [
-    new ExtractTextPlugin(IS_PRODUCTION ? '[name].[contenthash:8].css' : '[name].css'),
+    new ExtractTextPlugin(IS_PRODUCTION ? '[name]-[contenthash:8].css' : '[name].css'),
     new DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(NODE_ENV),
       '__DEV__': !IS_PRODUCTION
     }),
     new HashedModuleIdsPlugin(),
-    new CommonsChunkPlugin({ name: 'vendor', minChunks: 0 }),
+    new DllReferencePlugin({ context: '.', manifest: require(nodeModulePath.resolve(pathOutput, `dll-manifest/${DLL_NAME_MAP.VENDOR}.json`)) }),
+    new DllReferencePlugin({ context: '.', manifest: require(nodeModulePath.resolve(pathOutput, `dll-manifest/${DLL_NAME_MAP.VENDOR_FIREBASE}.json`)) }),
     new CommonsChunkPlugin({ name: 'runtime' }),
-    new ManifestPlugin({ fileName: 'manifest.json' }),
+    new ManifestPlugin({ fileName: 'manifest/common.json' }),
     ...(IS_PRODUCTION ? [
       new ModuleConcatenationPlugin(),
-      new MinifyPlugin({}, { test: { test: (file) => file.endsWith('.js') && !file.endsWith('vendor-firebase.js') } }), // TODO: minification error: https://github.com/firebase/firebase-js-sdk/issues/154
+      new MinifyPlugin(),
       new BannerPlugin({ banner: '/* eslint-disable */', raw: true, test: /\.js$/, entryOnly: false }),
       new BannerPlugin({ banner: '/* stylelint-disable */', raw: true, test: /\.css$/, entryOnly: false }),
       new CompressionPlugin({ minRatio: 1 })
     ] : [])
   ]
-}
+})
+
+module.exports = { getConfig }

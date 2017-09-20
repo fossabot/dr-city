@@ -44,7 +44,6 @@ const main = async () => {
         fileSSLChain: getOption('file-SSL-chain'),
         fileSSLDHParam: getOption('file-SSL-dhparam')
       } : {}),
-      filePackManifest: getOption('file-pack-manifest'),
       fileFirebaseAdminToken: getOption('file-firebase-admin-token'),
       pathResource: nodeModulePath.resolve(pathRelative, getOption('path-resource')),
       pathLog: nodeModulePath.resolve(pathRelative, getOption('path-log')),

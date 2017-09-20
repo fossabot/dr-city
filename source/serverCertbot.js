@@ -35,6 +35,4 @@ const configureServerCertBot = ({ hostName, pathResource }) => {
   return { server, start }
 }
 
-export {
-  configureServerCertBot
-}
+export { configureServerCertBot }

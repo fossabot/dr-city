@@ -24,9 +24,8 @@ const COMMAND_CONFIG_LIST = (process.platform.includes('nux') || process.platfor
 const getServerStatus = async () => {
   const taskList = COMMAND_CONFIG_LIST.map((config) => () => runCommand(config.command))
   const { resultList } = await promiseQueue({ taskList, shouldContinueOnError: true })
-  return COMMAND_CONFIG_LIST.map((config, index) => ({ config, status: resultList[ index ] }))
+  const serverStatusList = COMMAND_CONFIG_LIST.map((config, index) => ({ config, status: resultList[ index ] }))
+  return { platform: process.platform, serverStatusList }
 }
 
-export {
-  getServerStatus
-}
+export { getServerStatus }

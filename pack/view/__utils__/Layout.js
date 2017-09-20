@@ -51,7 +51,7 @@ class Layout extends PureComponent {
   }
 }
 
-const getRouteDataCached = immutableTransformCache((route) => ({ title: ROUTE_INFO_MAP(route).title, drawerContent: getDrawerContent(route) }))
+const getRouteDataCached = immutableTransformCache((route) => ({ title: ROUTE_INFO_MAP[ route ].title, drawerContent: getDrawerContent(route) }))
 
 const DrawerList = ({ children }) => <div className={CSS_DRAWER_LIST}><List>{children}</List></div>
 DrawerList.propTypes = { children: PropTypes.node }
@@ -81,8 +81,8 @@ const getDrawerContent = (currentRoute) => <div className={CSS_DRAWER_LIST}><Lis
 </List><Divider /><List>
   <DrawerItem {...ROUTE_INFO_MAP[ ROUTE_MAP.TEST_AUTH ]} isSelect={currentRoute === ROUTE_MAP.TEST_AUTH} />
   <DrawerItem {...ROUTE_INFO_MAP[ ROUTE_MAP.TEST_WEBSOCKET ]} isSelect={currentRoute === ROUTE_MAP.TEST_WEBSOCKET} />
-</List><Divider /><List>
-  <DrawerItem {...ROUTE_INFO_MAP[ ROUTE_MAP.INFO ]} isSelect={currentRoute === ROUTE_MAP.INFO} />
+{/*</List><Divider /><List>*/}
+  {/*<DrawerItem {...ROUTE_INFO_MAP[ ROUTE_MAP.INFO ]} isSelect={currentRoute === ROUTE_MAP.INFO} />*/}
 </List></div>
 
 export {

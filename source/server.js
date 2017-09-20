@@ -1,12 +1,13 @@
+import nodeModulePath from 'path'
 import nodeModuleFs from 'fs'
 import { promisify } from 'util'
 import { Common, Node } from 'dr-js/module/Dr.node'
+import { createStatisticLogger, wrapSetHSTS, wrapSetCacheControl } from './__utils__'
 import { initFirebaseAdminApp, responderAuthVerifyToken, applyWebSocketServer } from './Responder'
+import { createResponderTask } from './Task'
 import { createResponderRenderView } from './View'
-import { createStatisticLogger } from './Task/saveStatistics'
 
 const readFileAsync = promisify(nodeModuleFs.readFile)
-
 const { Format, Time: { clock }, Data: { CacheMap } } = Common
 const {
   System: { addProcessExitListener },
@@ -29,18 +30,12 @@ const {
 const CACHE_BUFFER_SIZE_SUM_MAX = 32 * 1024 * 1024 // in byte, 32mB
 const CACHE_EXPIRE_TIME = __DEV__ ? 0 : 60 * 1000 // in msec, 1min
 
-const wrapSetHSTS = (next) => (store) => {
-  store.response.setHeader('strict-transport-security', 'max-age=31536000; includeSubDomains; preload')
-  return next(store)
-}
-
-const wrapSetCacheControl = (next) => (store) => {
-  store.response.setHeader('cache-control', __DEV__ ? 'no-cache' : 'public, max-age=2592000') // in seconds, 30days = 2592000 = 30 * 24 * 60 * 60
-  return next(store)
-}
-
-const configureServer = async ({ protocol, hostName, port, fileSSLKey, fileSSLCert, fileSSLChain, fileSSLDHParam, filePackManifest, fileFirebaseAdminToken, pathResource, pathLog, logFilePrefix }) => {
-  const packManifestMap = JSON.parse(await readFileAsync(filePackManifest, 'utf8'))
+const configureServer = async ({ protocol, hostName, port, fileSSLKey, fileSSLCert, fileSSLChain, fileSSLDHParam, fileFirebaseAdminToken, pathResource, pathLog, logFilePrefix }) => {
+  const packManifestMap = {
+    ...JSON.parse(await readFileAsync(nodeModulePath.join(pathResource, 'pack/manifest/common.json'), 'utf8')),
+    ...JSON.parse(await readFileAsync(nodeModulePath.join(pathResource, 'pack/manifest/dll-vendor.json'), 'utf8')),
+    ...JSON.parse(await readFileAsync(nodeModulePath.join(pathResource, 'pack/manifest/dll-vendor-firebase.json'), 'utf8'))
+  }
   const firebaseAdminApp = initFirebaseAdminApp(JSON.parse(await readFileAsync(fileFirebaseAdminToken, 'utf8')))
 
   const { logStatistic, endStatistic } = await createStatisticLogger({ logRoot: pathLog, logFilePrefix })
@@ -61,6 +56,11 @@ const configureServer = async ({ protocol, hostName, port, fileSSLKey, fileSSLCe
     const errorLog = state.error ? ` [ERROR] ${data.finished ? 'finished' : 'not-finished'} ${state.error}` : ''
     logStatistic(`${state.time} [END] ${Format.time(data.duration)} ${data.statusCode}${errorLog}`)
   })
+  const responderTask = createResponderTask({
+    staticRoot: `${pathResource}/static`,
+    staticRoutePrefix: '/r/static',
+    serveCacheMap
+  })
   const responderRenderView = createResponderRenderView({
     getStatic: (path) => `/r/static/${path}`,
     getPack: (path) => `/r/pack/${packManifestMap[ path ]}`,
@@ -78,7 +78,7 @@ const configureServer = async ({ protocol, hostName, port, fileSSLKey, fileSSLCe
   // set router
   const routerMapBuilder = createRouterMapBuilder()
   routerMapBuilder.addRoute('/', 'GET', (store) => {
-    store.setState({ viewKey: 'home' })
+    store.setState({ viewKey: 'view:home' })
     return responderRenderView(store)
   })
   routerMapBuilder.addRoute('/favicon', 'GET', routeProcessorFavicon)
@@ -87,8 +87,12 @@ const configureServer = async ({ protocol, hostName, port, fileSSLKey, fileSSLCe
     store.setState({ filePath: store.getState().paramMap[ routerMapBuilder.ROUTE_ANY ] })
     return responderServeStatic(store)
   })
+  routerMapBuilder.addRoute('/t/*', 'GET', (store) => {
+    store.setState({ taskKey: `task:${store.getState().paramMap[ routerMapBuilder.ROUTE_ANY ]}` })
+    return responderTask(store)
+  })
   routerMapBuilder.addRoute('/v/*', 'GET', (store) => {
-    store.setState({ viewKey: store.getState().paramMap[ routerMapBuilder.ROUTE_ANY ] })
+    store.setState({ viewKey: `view:${store.getState().paramMap[ routerMapBuilder.ROUTE_ANY ]}` })
     return responderRenderView(store)
   })
   routerMapBuilder.addRoute('/auth/*', 'GET', async (store) => {
@@ -133,6 +137,4 @@ const configureServer = async ({ protocol, hostName, port, fileSSLKey, fileSSLCe
   return { server, start }
 }
 
-export {
-  configureServer
-}
+export { configureServer }

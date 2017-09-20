@@ -14,12 +14,12 @@ const CACHE_EXPIRE_TIME = __DEV__ ? 0 : 60 * 1000 // in msec, 1min
 
 const createResponderRenderView = ({ getStatic, getPack, route, staticRoot, staticRoutePrefix, serveCacheMap }) => {
   const renderKeyMap = new Map()
-  renderKeyMap.set('default', renderDefault)
-  renderKeyMap.set('home', renderHome)
-  renderKeyMap.set('server-status', renderServerStatus)
-  renderKeyMap.set('static-file-list', renderStaticFileList)
-  renderKeyMap.set('test-auth', renderAuth)
-  renderKeyMap.set('test-websocket', renderWebSocket)
+  renderKeyMap.set('view:default', renderDefault)
+  renderKeyMap.set('view:home', renderHome)
+  renderKeyMap.set('view:server-status', renderServerStatus)
+  renderKeyMap.set('view:static-file-list', renderStaticFileList)
+  renderKeyMap.set('view:test-auth', renderAuth)
+  renderKeyMap.set('view:test-websocket', renderWebSocket)
 
   const data = { getStatic, getPack, route, staticRoot, staticRoutePrefix, viewKeyList: Array.from(renderKeyMap.keys()) }
 
@@ -27,7 +27,7 @@ const createResponderRenderView = ({ getStatic, getPack, route, staticRoot, stat
     getKey: (store) => {
       let { viewKey } = store.getState()
       if (!renderKeyMap.has(viewKey)) {
-        viewKey = 'default'
+        viewKey = 'view:default'
         store.setState({ viewKey })
       }
       __DEV__ && console.log(`[responderRenderView] getKey ${viewKey}`)
@@ -44,6 +44,4 @@ const createResponderRenderView = ({ getStatic, getPack, route, staticRoot, stat
   })
 }
 
-export {
-  createResponderRenderView
-}
+export { createResponderRenderView }
