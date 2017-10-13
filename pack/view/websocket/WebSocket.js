@@ -1,9 +1,7 @@
 import React, { PureComponent } from 'react'
 import PropTypes from 'prop-types'
 import { Card, CardContent, CardActions, Grid, Button, TextField, Typography, withStyles } from 'material-ui'
-import CSS_METRICS from 'theme/metrics.pcss'
-
-const CSS_CARD = CSS_METRICS[ 'padding-m' ]
+import { GridContainer } from 'view/__utils__'
 
 class WebSocketComponent extends PureComponent {
   static propTypes = {
@@ -16,7 +14,7 @@ class WebSocketComponent extends PureComponent {
     openBufferPacketWebSocket: PropTypes.func,
     sendBufferPacketWebSocket: PropTypes.func,
     closeBufferPacketWebSocket: PropTypes.func,
-    classes: PropTypes.object.isRequired // from withStyles
+    classes: PropTypes.object.isRequired
   }
 
   constructor (props) {
@@ -58,14 +56,14 @@ class WebSocketComponent extends PureComponent {
     } = this.props
     const hasTextJSONWebSocket = Boolean(textJSONWebSocket)
     const hasBufferPacketSocket = Boolean(bufferPacketWebSocket)
-    return <Grid className={CSS_CARD} container justify="center">
+    return <GridContainer>
       <Grid item xs={12} sm={6}><Card>
         <CardContent>
           <Typography type="title" className={classes.title}>Text JSON</Typography>
           <TextField inputRef={this.setTextJSONTypeRef} label="Type" placeholder="data-type" margin="normal" fullWidth />
           <TextField inputRef={this.setTextJSONPayloadRef} label="Payload" placeholder="data-payload" margin="normal" fullWidth multiline />
-          <Grid component="pre" className={classes.log}>{textJSONLog || 'LOG'}</Grid>
         </CardContent>
+        <Grid component="pre" className={classes.log}>{textJSONLog || 'LOG'}</Grid>
         <CardActions>
           <Button onClick={hasTextJSONWebSocket ? closeTextJSONWebSocket : openTextJSONWebSocket}>{hasTextJSONWebSocket ? 'Close' : 'Open'}</Button>
           <Button onClick={this.sendTextJSONWebSocket} disabled={!hasTextJSONWebSocket}>Send</Button>
@@ -78,20 +76,20 @@ class WebSocketComponent extends PureComponent {
           <TextField inputRef={this.setBufferPacketTypeRef} label="Type" placeholder="data-type" margin="normal" fullWidth />
           <TextField inputRef={this.setBufferPacketPayloadRef} label="Payload" placeholder="data-payload" margin="normal" fullWidth multiline />
           <TextField inputRef={this.setBufferPacketBlobRef} type="file" label="Blob" margin="normal" fullWidth />
-          <Grid component="pre" className={classes.log}>{bufferPacketLog || 'LOG'}</Grid>
         </CardContent>
+        <Grid component="pre" className={classes.log}>{bufferPacketLog || 'LOG'}</Grid>
         <CardActions>
           <Button onClick={hasBufferPacketSocket ? closeBufferPacketWebSocket : openBufferPacketWebSocket}>{hasBufferPacketSocket ? 'Close' : 'Open'}</Button>
           <Button onClick={this.sendBufferPacketWebSocket} disabled={!hasBufferPacketSocket}>Send</Button>
           <Button onClick={logBufferPacketReset} disabled={!bufferPacketLog}>Clear Log</Button>
         </CardActions>
       </Card></Grid>
-    </Grid>
+    </GridContainer>
   }
 }
 
 const WebSocket = withStyles((theme) => ({
-  log: { overflow: 'auto', margin: '16px 0 8px', padding: '8px', maxHeight: '360px', background: theme.palette.secondary[ 100 ] }
+  log: { overflow: 'auto', padding: '8px', minHeight: '60px', maxHeight: '360px', background: theme.palette.secondary[ 100 ] }
 }))(WebSocketComponent)
 
 export { WebSocket }

@@ -2,45 +2,42 @@ import { Common } from 'dr-js/module/Dr.browser'
 import React, { PureComponent } from 'react'
 import PropTypes from 'prop-types'
 import {
-  AppBar, Toolbar, Drawer, Divider,
+  AppBar, Toolbar, Drawer, Divider, Grid,
   List, ListItem, ListItemIcon, ListItemText,
-  IconButton, Icon,
-  Typography,
+  IconButton, Icon, Typography,
   MuiThemeProvider, withStyles
 } from 'material-ui'
 
+import { metrics } from 'theme/metrics'
 import { MuiTheme } from 'theme/material-ui'
-import CSS_METRICS from 'theme/metrics.pcss'
 
 import { ROUTE_MAP, ROUTE_INFO_MAP } from './route'
 
-const CSS_MAIN = CSS_METRICS[ 'fill-overflow-vertical' ]
-const CSS_DRAWER_LIST = CSS_METRICS[ 'drawer-content' ]
-const CSS_MENU_BUTTON = CSS_METRICS[ 'toolbar-menu-button' ]
-
 const { Immutable: { immutableTransformCache } } = Common
 
-class Layout extends PureComponent {
+class LayoutComponent extends PureComponent {
   static propTypes = {
     route: PropTypes.string,
+    classes: PropTypes.object.isRequired,
     children: PropTypes.node
   }
 
   constructor (props) {
     super(props)
+    this.getRouteDataCached = immutableTransformCache((route) => ({ title: ROUTE_INFO_MAP[ route ].title, drawerContent: getDrawerContent(route) }))
     this.doDrawerOpen = () => this.setState({ isDrawerOpen: true })
     this.doDrawerClose = () => this.setState({ isDrawerOpen: false })
     this.state = { isDrawerOpen: false }
   }
 
   render () {
-    const { route, children } = this.props
+    const { route, classes, children } = this.props
     const { isDrawerOpen } = this.state
-    const { title, drawerContent } = getRouteDataCached(route)
+    const { title, drawerContent } = this.getRouteDataCached(route)
     return <MuiThemeProvider theme={MuiTheme}>
-      <div className={CSS_MAIN}>
+      <div className={classes.fill}>
         <AppBar><Toolbar disableGutters>
-          <IconButton className={CSS_MENU_BUTTON} onClick={this.doDrawerOpen}><Icon>menu</Icon></IconButton>
+          <IconButton className={classes.menuButton} onClick={this.doDrawerOpen}><Icon>menu</Icon></IconButton>
           <Typography type="title" color="inherit" noWrap>{title}</Typography>
         </Toolbar></AppBar>
         <AppBarPlaceholder />
@@ -51,10 +48,11 @@ class Layout extends PureComponent {
   }
 }
 
-const getRouteDataCached = immutableTransformCache((route) => ({ title: ROUTE_INFO_MAP[ route ].title, drawerContent: getDrawerContent(route) }))
+const Layout = withStyles((theme) => ({ fill: { width: '100%', overflow: 'hidden' }, menuButton: { margin: `0 ${metrics.lengthS}` } }))(LayoutComponent)
 
-const DrawerList = ({ children }) => <div className={CSS_DRAWER_LIST}><List>{children}</List></div>
-DrawerList.propTypes = { children: PropTypes.node }
+const DrawerContainerComponent = ({ classes, children }) => <div className={classes.drawer}>{children}</div>
+DrawerContainerComponent.propTypes = { classes: PropTypes.object.isRequired, children: PropTypes.node }
+const DrawerContainer = withStyles((theme) => ({ drawer: { width: metrics.lengthDrawer } }))(DrawerContainerComponent)
 
 const DrawerItemComponent = ({ title, iconName, onClick, isSelect, classes }) => <ListItem button onClick={isSelect ? null : onClick}>
   <ListItemIcon><Icon className={isSelect ? classes.select : null}>{iconName}</Icon></ListItemIcon>
@@ -65,15 +63,19 @@ DrawerItemComponent.propTypes = {
   iconName: PropTypes.string,
   onClick: PropTypes.func,
   isSelect: PropTypes.bool,
-  classes: PropTypes.object.isRequired // from withStyles
+  classes: PropTypes.object.isRequired
 }
 const DrawerItem = withStyles((theme) => ({ select: { color: theme.palette.primary[ 900 ] } }))(DrawerItemComponent)
 
 const AppBarPlaceholderComponent = ({ classes }) => <AppBar position="static" className={classes.placeholder}><Toolbar /></AppBar>
-AppBarPlaceholderComponent.propTypes = { classes: PropTypes.object.isRequired } // from withStyles
+AppBarPlaceholderComponent.propTypes = { classes: PropTypes.object.isRequired }
 const AppBarPlaceholder = withStyles((theme) => ({ placeholder: { visibility: 'hidden' } }))(AppBarPlaceholderComponent)
 
-const getDrawerContent = (currentRoute) => <div className={CSS_DRAWER_LIST}><List>
+const GridContainerComponent = ({ classes, children }) => <Grid className={classes.paddingM} container justify="center">{children}</Grid>
+GridContainerComponent.propTypes = { classes: PropTypes.object.isRequired, children: PropTypes.node }
+const GridContainer = withStyles((theme) => ({ paddingM: { padding: metrics.lengthM } }))(GridContainerComponent)
+
+const getDrawerContent = (currentRoute) => <DrawerContainer><List>
   <DrawerItem {...ROUTE_INFO_MAP[ ROUTE_MAP.HOME ]} isSelect={currentRoute === ROUTE_MAP.HOME || currentRoute === ROUTE_MAP.HOME_ALIAS} />
 </List><Divider /><List>
   <DrawerItem {...ROUTE_INFO_MAP[ ROUTE_MAP.SERVER_STATUS ]} isSelect={currentRoute === ROUTE_MAP.SERVER_STATUS} />
@@ -81,13 +83,13 @@ const getDrawerContent = (currentRoute) => <div className={CSS_DRAWER_LIST}><Lis
 </List><Divider /><List>
   <DrawerItem {...ROUTE_INFO_MAP[ ROUTE_MAP.TEST_AUTH ]} isSelect={currentRoute === ROUTE_MAP.TEST_AUTH} />
   <DrawerItem {...ROUTE_INFO_MAP[ ROUTE_MAP.TEST_WEBSOCKET ]} isSelect={currentRoute === ROUTE_MAP.TEST_WEBSOCKET} />
-{/*</List><Divider /><List>*/}
-  {/*<DrawerItem {...ROUTE_INFO_MAP[ ROUTE_MAP.INFO ]} isSelect={currentRoute === ROUTE_MAP.INFO} />*/}
-</List></div>
+  {/* </List><Divider /><List> */}
+  {/* <DrawerItem {...ROUTE_INFO_MAP[ ROUTE_MAP.INFO ]} isSelect={currentRoute === ROUTE_MAP.INFO} /> */}
+</List></DrawerContainer>
 
 export {
   Layout,
-  DrawerList,
-  DrawerItem,
+  DrawerContainer,
+  GridContainer,
   getDrawerContent
 }

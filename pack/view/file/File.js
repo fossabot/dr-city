@@ -1,14 +1,8 @@
 import React, { PureComponent } from 'react'
-import {
-  Card, CardContent,
-  List, ListItem, ListItemIcon, ListItemText,
-  Grid, Snackbar, Button
-} from 'material-ui'
+import { Card, List, ListItem, ListItemIcon, ListItemText, Grid, Snackbar, Button } from 'material-ui'
 
-import CSS_METRICS from 'theme/metrics.pcss'
+import { GridContainer } from 'view/__utils__'
 import { getTag } from './Tag'
-
-const CSS_CARD = CSS_METRICS[ 'padding-m' ]
 
 class File extends PureComponent {
   constructor (props) {
@@ -41,18 +35,18 @@ class File extends PureComponent {
 
   render () {
     const { staticRoutePrefix, relativeFilePathList } = this.state
-    return <Grid className={CSS_CARD} container justify="center">
+    return <GridContainer>
       <Grid item xs={12} sm={6}><Card>
-        <CardContent><List dense>{
+        {relativeFilePathList.length !== 0 && <List dense>{
           relativeFilePathList.map((relativeFilePath) => renderTagLink(
             (REGEXP_EXTNAME.exec(relativeFilePath) || ' ')[ 0 ].slice(1).toUpperCase(),
             `${staticRoutePrefix}/${relativeFilePath}`,
             relativeFilePath
           ))
-        }</List></CardContent>
+        }</List>}
         {this.renderErrorSnackbar()}
       </Card></Grid>
-    </Grid>
+    </GridContainer>
   }
 }
 

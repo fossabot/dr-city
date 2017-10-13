@@ -1,17 +1,11 @@
 import React, { PureComponent } from 'react'
 import PropTypes from 'prop-types'
-import {
-  Card, CardHeader, CardContent,
-  Grid, Snackbar, Button,
-  withStyles
-} from 'material-ui'
-import CSS_METRICS from 'theme/metrics.pcss'
-
-const CSS_CARD = CSS_METRICS[ 'padding-m' ]
+import { Card, CardHeader, Grid, Snackbar, Button, withStyles } from 'material-ui'
+import { GridContainer } from 'view/__utils__'
 
 class StatusComponent extends PureComponent {
   static propTypes = {
-    classes: PropTypes.object.isRequired // from withStyles
+    classes: PropTypes.object.isRequired
   }
 
   constructor (props) {
@@ -48,25 +42,23 @@ class StatusComponent extends PureComponent {
     const { code, signal, stdoutString, stderrString } = status
     return <Grid key={index} item xs={12} sm={6}><Card>
       <CardHeader title={config.name} subheader={config.command} />
-      <CardContent>
-        {code !== 0 && <Grid component="pre" className={classes.log}>[{code}] {signal || ''}</Grid>}
-        {stdoutString && <Grid component="pre" className={classes.log}>{stdoutString}</Grid>}
-        {stderrString && <Grid component="pre" className={classes.log}>{stderrString}</Grid>}
-      </CardContent>
+      {code !== 0 && <Grid component="pre" className={classes.log}>[{code}] {signal || ''}</Grid>}
+      {stdoutString && <Grid component="pre" className={classes.log}>{stdoutString}</Grid>}
+      {stderrString && <Grid component="pre" className={classes.log}>{stderrString}</Grid>}
     </Card></Grid>
   }
 
   render () {
     const { serverStatusList } = this.state
-    return <Grid className={CSS_CARD} container justify="center">
+    return <GridContainer>
       {serverStatusList.map(this.renderStatusCard, this)}
       {this.renderErrorSnackbar()}
-    </Grid>
+    </GridContainer>
   }
 }
 
 const Status = withStyles((theme) => ({
-  log: { overflow: 'auto', maxHeight: '360px', background: theme.palette.secondary[ 100 ] }
+  log: { overflow: 'auto', padding: '16px', height: '360px', fontSize: '14px', background: theme.palette.secondary[ 100 ] }
 }))(StatusComponent)
 
 export { Status }

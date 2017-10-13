@@ -5,9 +5,7 @@ import {
   Avatar, Button, Typography
 } from 'material-ui'
 
-import CSS_METRICS from 'theme/metrics.pcss'
-
-const CSS_CARD = CSS_METRICS[ 'padding-m' ]
+import { GridContainer } from 'view/__utils__'
 
 class Auth extends PureComponent {
   static propTypes = {
@@ -26,7 +24,7 @@ class Auth extends PureComponent {
         {user.photoURL ? null : (user.displayName || '')[ 0 ].toUpperCase()}
       </Avatar>
       : <Avatar>?</Avatar>
-    return <Grid className={CSS_CARD} container justify="center">
+    return <GridContainer>
       <Grid item xs={12} sm={6} lg={3}>
         <Card>
           <CardHeader title={isAuth ? user.displayName : blankSpan} subheader={isAuth ? user.email : blankSpan} avatar={userAvatar} />
@@ -42,7 +40,7 @@ class Auth extends PureComponent {
           </CardActions>
         </Card>
       </Grid>
-    </Grid>
+    </GridContainer>
   }
 }
 

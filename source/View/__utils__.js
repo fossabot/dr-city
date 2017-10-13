@@ -2,12 +2,12 @@ const DOCTYPE_HTML = '<!DOCTYPE html>'
 
 const COMMON_HEAD_CONTENT = ({ getStatic }) => `<meta charset="utf-8">
 <meta name="viewport" content="initial-scale=1, maximum-scale=5, minimum-scale=1, width=device-width">
-<meta name="theme-color" content="#66aaff">
+<meta name="theme-color" content="#63aeff">
+<link rel="manifest" href="/r/static/manifest.json">
 <link href="${getStatic('favicon.ico')}" rel="shortcut icon">`
 
 const STYLE_RESET = () => `<style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { width: 100%; height: 100%; overflow: hidden; font-family: monospace; font-size: 16px; background: #f5f5f5; }
   button { font: inherit; }
   textarea { outline: none; resize: none; background: transparent; }
   ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -25,7 +25,7 @@ const getRender = ({ title, packScriptList, packStyleList }) => (data) => `${DOC
   <title>${title}</title>
 </head>
 <body>
-<div id="root" style="width: 100%; height: 100%; overflow: auto;">This should be replaced with React soon...</div>
+<div id="root" style="width: 100%; min-height: 100vh; overflow: auto; font-family: monospace; font-size: 16px; background: #f5f5f5;">This should be replaced with React soon...</div>
 ${packScriptList.map((packScript) => `<script src="${data.getPack(packScript)}"></script>`).join('\n')}
 <script>window.main(document.getElementById('root'))</script>
 </body>

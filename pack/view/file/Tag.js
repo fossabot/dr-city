@@ -10,15 +10,17 @@ const textToHue = (text) => {
 const TagComponent = ({ text, classes }) => <b className={classes.tag} style={{ background: `hsl(${textToHue(text)}, 100%, 85%)` }}>{text}</b>
 TagComponent.propTypes = {
   text: PropTypes.string,
-  classes: PropTypes.object.isRequired // from withStyles
+  classes: PropTypes.object.isRequired
 }
 const Tag = withStyles((theme) => ({
   tag: {
     display: 'inline-block',
-    overflow: 'hidden',
+    overflow: 'visible',
     flex: '0 0 24px',
+    padding: '1px',
     width: '24px',
     height: '24px',
+    borderRadius: '2px',
     fontSize: '10px',
     lineHeight: '10px',
     wordBreak: 'break-all'
