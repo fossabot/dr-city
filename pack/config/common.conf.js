@@ -11,13 +11,8 @@ const NODE_ENV = process.env.NODE_ENV
 const IS_PRODUCTION = NODE_ENV === 'production'
 
 const OPTIONS = {
-  BABEL_LOADER: IS_PRODUCTION
-    ? { presets: [ [ 'es2015', { modules: false } ], 'stage-0', 'react' ] }
-    : { presets: [ 'stage-0', 'react' ] },
-  CSS_LOADER: IS_PRODUCTION
-    ? { importLoaders: 1, localIdentName: '[hash:base64:12]' }
-    : { importLoaders: 1, localIdentName: '[name]_[local]_[hash:base64:5]' },
-  POSTCSS_LOADER: { plugins: () => [ require('postcss-cssnext') ] }
+  BABEL_LOADER: { presets: IS_PRODUCTION ? [ [ 'es2015', { modules: false } ], 'stage-0', 'react' ] : [ 'stage-0', 'react' ] },
+  CSS_LOADER: { localIdentName: IS_PRODUCTION ? '[hash:base64:12]' : '[name]_[local]_[hash:base64:5]' }
 }
 
 const getConfig = ({ pathOutput }) => ({
@@ -46,7 +41,7 @@ const getConfig = ({ pathOutput }) => ({
       use: [ { loader: 'babel-loader', options: OPTIONS.BABEL_LOADER } ]
     }, {
       test: /\.pcss$/,
-      use: ExtractTextPlugin.extract({ use: [ { loader: 'css-loader', options: OPTIONS.CSS_LOADER }, { loader: 'postcss-loader', options: OPTIONS.POSTCSS_LOADER } ] })
+      use: ExtractTextPlugin.extract({ use: [ { loader: 'css-loader', options: OPTIONS.CSS_LOADER } ] })
     }, {
       exclude: [ /\.js$/, /\.pcss$/, /\.json$/ ],
       use: [ { loader: 'file-loader', options: { name: IS_PRODUCTION ? '../static/[name]-[hash].[ext]' : '../static/[name].[ext]' } } ]

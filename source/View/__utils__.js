@@ -4,7 +4,10 @@ const COMMON_HEAD_CONTENT = ({ getStatic }) => `<meta charset="utf-8">
 <meta name="viewport" content="initial-scale=1, maximum-scale=5, minimum-scale=1, width=device-width">
 <meta name="theme-color" content="#63aeff">
 <link rel="manifest" href="/r/static/manifest.json">
-<link href="${getStatic('favicon.ico')}" rel="shortcut icon">`
+<link rel="shortcut icon" href="${getStatic('favicon.ico')}">
+<link rel="preload" href="/r/static/material/Material-Icons.woff2" as="font" type="application/font-woff2">
+<link rel="preload" href="/r/static/material/Roboto-Regular.woff2" as="font" type="application/font-woff2">
+<link rel="preload" href="/r/static/material/Roboto-Medium.woff2" as="font" type="application/font-woff2">`
 
 const STYLE_RESET = () => `<style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -25,8 +28,8 @@ const getRender = ({ title, packScriptList, packStyleList }) => (data) => `${DOC
   <title>${title}</title>
 </head>
 <body>
-<div id="root" style="width: 100%; min-height: 100vh; overflow: auto; font-family: monospace; font-size: 16px; background: #f5f5f5;">This should be replaced with React soon...</div>
 ${packScriptList.map((packScript) => `<script src="${data.getPack(packScript)}"></script>`).join('\n')}
+<div id="root" style="width: 100%; min-height: 100vh; overflow: auto; font-family: monospace; font-size: 16px; background: #f5f5f5;">This should be replaced with React soon...</div>
 <script>window.main(document.getElementById('root'))</script>
 </body>
 </html>`

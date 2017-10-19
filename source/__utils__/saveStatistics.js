@@ -9,7 +9,12 @@ const { File: { createDirectory }, Module: { createLogger } } = Node
 const DEFAULT_LOG_LENGTH_THRESHOLD = 1024
 const LOG_FILE_SPLIT_INTERVAL = 24 * 60 * 60 * 1000 // 24hour
 
-const createStatisticLogger = async ({ logRoot, logFilePrefix = '', logLengthThreshold = DEFAULT_LOG_LENGTH_THRESHOLD }) => {
+const createStatisticLogger = async ({ logRoot = '', logFilePrefix = '', logLengthThreshold = DEFAULT_LOG_LENGTH_THRESHOLD }) => {
+  if (!logRoot) {
+    __DEV__ && console.log('[Logger] output to console.log')
+    return { logStatistic: console.log, endStatistic: () => {} }
+  }
+
   await createDirectory(logRoot)
 
   const resetLogger = () => {

@@ -7,8 +7,10 @@ export const renderDefault = (data) => `${DOCTYPE_HTML}
   ${STYLE_RESET(data)}
   <title>Content not found</title>
 </head>
-<body style="width: 100%; height: 100%; overflow: auto;">
+<body>
+<div id="root" style="width: 100%; min-height: 100vh; overflow: auto; font-family: monospace; font-size: 16px; background: #f5f5f5;">
 <p>Content not found...</p>
 <a href="/">HOME</a>
+</div>
 </body>
 </html>`
