@@ -29,31 +29,34 @@ const main = async () => {
   __DEV__ && console.log('processOptionMap PASS')
 
   const mode = getSingleOption('mode')
-  const hostName = getSingleOption('host-name')
+  const hostname = getSingleOption('hostname')
   const pathResource = getSingleOption('path-resource')
 
   if (mode === 'server') {
-    const protocol = getSingleOption('type')
+    const protocol = getSingleOption('protocol')
     const { start } = await configureServer({
       protocol,
-      hostName,
+      hostname,
       port: getSingleOption('port'),
-      ...(protocol === 'HTTPS' ? {
+      ...(protocol === 'https:' ? {
         fileSSLKey: getSingleOption('file-SSL-key'),
         fileSSLCert: getSingleOption('file-SSL-cert'),
         fileSSLChain: getSingleOption('file-SSL-chain'),
         fileSSLDHParam: getSingleOption('file-SSL-dhparam')
       } : {}),
       fileFirebaseAdminToken: getSingleOption('file-firebase-admin-token'),
+      filePid: getSingleOptionOptional('file-pid'),
       pathResource,
-      pathLog: getSingleOption('path-log'),
-      logFilePrefix: getSingleOption('prefix-log-file')
+      pathStatic: getSingleOption('path-static'),
+      pathUser: getSingleOption('path-user'),
+      pathLog: getSingleOptionOptional('path-log'),
+      logFilePrefix: getSingleOptionOptional('prefix-log-file')
     })
     return start()
   }
 
   if (mode === 'certbot') {
-    const { start } = await configureServerCertBot({ hostName, pathResource })
+    const { start } = await configureServerCertBot({ hostname, pathResource })
     return start()
   }
 

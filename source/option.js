@@ -2,7 +2,10 @@ import { Common } from 'dr-js/module/Dr.node'
 const { createOptionParser, OPTION_CONFIG_PRESET } = Common.Module
 
 const checkModeServerOption = (optionMap, optionFormatSet, format) => optionMap[ 'mode' ].argumentList[ 0 ] !== 'server'
-const checkTypeHttpsOption = (optionMap, optionFormatSet, format) => optionMap[ 'type' ].argumentList[ 0 ] !== 'HTTPS'
+const checkTypeHttpsOption = (optionMap, optionFormatSet, format) => optionMap[ 'protocol' ].argumentList[ 0 ] !== 'https:'
+
+const CommonSingleStringPathFormat = { ...OPTION_CONFIG_PRESET.SingleString, isPath: true }
+const CommonHttpsOptionFormat = { optional: checkTypeHttpsOption, ...CommonSingleStringPathFormat }
 
 const OPTION_CONFIG = {
   prefixENV: 'dr-city',
@@ -20,26 +23,33 @@ const OPTION_CONFIG = {
       description: `should be 'server' or 'certbot'`,
       ...OPTION_CONFIG_PRESET.OneOfString([ 'server', 'certbot' ]),
       extendFormatList: [
-        { name: 'file-firebase-admin-token', optional: checkModeServerOption, ...OPTION_CONFIG_PRESET.SingleString, isPath: true },
-        { name: 'path-log', optional: checkModeServerOption, ...OPTION_CONFIG_PRESET.SingleString, isPath: true },
-        { name: 'prefix-log-file', optional: checkModeServerOption, ...OPTION_CONFIG_PRESET.SingleString }
+        { name: 'hostname', shortName: 'h', ...OPTION_CONFIG_PRESET.SingleString },
+        { name: 'port', shortName: 'p', ...OPTION_CONFIG_PRESET.SingleInteger },
+        {
+          name: 'protocol',
+          shortName: 't',
+          description: `protocol type, 'https:' or 'http:'`,
+          ...OPTION_CONFIG_PRESET.OneOfString([ 'https:', 'http:' ]),
+          extendFormatList: [
+            { name: 'file-SSL-key', ...CommonHttpsOptionFormat },
+            { name: 'file-SSL-cert', ...CommonHttpsOptionFormat },
+            { name: 'file-SSL-chain', ...CommonHttpsOptionFormat },
+            { name: 'file-SSL-dhparam', ...CommonHttpsOptionFormat }
+          ]
+        },
+        { name: 'path-resource', ...CommonSingleStringPathFormat },
+        { name: 'path-static', optional: checkModeServerOption, ...CommonSingleStringPathFormat },
+        { name: 'path-user', optional: checkModeServerOption, ...CommonSingleStringPathFormat },
+        {
+          name: 'path-log',
+          optional: true,
+          ...CommonSingleStringPathFormat,
+          extendFormatList: [ { name: 'prefix-log-file', optional: true, ...OPTION_CONFIG_PRESET.SingleString } ]
+        },
+        { name: 'file-pid', optional: true, ...CommonSingleStringPathFormat },
+        { name: 'file-firebase-admin-token', optional: checkModeServerOption, ...CommonSingleStringPathFormat }
       ]
-    },
-    {
-      name: 'type',
-      shortName: 't',
-      description: `protocol type, 'HTTPS' or 'HTTP'`,
-      ...OPTION_CONFIG_PRESET.OneOfString([ 'HTTPS', 'HTTP' ]),
-      extendFormatList: [
-        { name: 'file-SSL-key', optional: checkTypeHttpsOption, ...OPTION_CONFIG_PRESET.SingleString, isPath: true },
-        { name: 'file-SSL-cert', optional: checkTypeHttpsOption, ...OPTION_CONFIG_PRESET.SingleString, isPath: true },
-        { name: 'file-SSL-chain', optional: checkTypeHttpsOption, ...OPTION_CONFIG_PRESET.SingleString, isPath: true },
-        { name: 'file-SSL-dhparam', optional: checkTypeHttpsOption, ...OPTION_CONFIG_PRESET.SingleString, isPath: true }
-      ]
-    },
-    { name: 'host-name', shortName: 'h', ...OPTION_CONFIG_PRESET.SingleString },
-    { name: 'port', shortName: 'p', ...OPTION_CONFIG_PRESET.SingleInteger },
-    { name: 'path-resource', ...OPTION_CONFIG_PRESET.SingleString, isPath: true }
+    }
   ]
 }
 

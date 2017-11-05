@@ -10,19 +10,19 @@ const {
 } = Node
 
 // common protocol
-const enableProtocolTextJSON = (store, onData) => store.webSocket.on(WEB_SOCKET_EVENT_MAP.FRAME, (webSocket, { dataType, dataBuffer }) => {
+const enableProtocolTextJSON = (store, onData) => store.webSocket.on(WEB_SOCKET_EVENT_MAP.FRAME, async (webSocket, { dataType, dataBuffer }) => {
   __DEV__ && console.log(`>> FRAME:`, dataType, dataBuffer.length, dataBuffer.toString().slice(0, 20))
   if (dataType !== DATA_TYPE_MAP.OPCODE_TEXT) return webSocket.close(1000, 'OPCODE_TEXT opcode expected')
-  try { onData(store, JSON.parse(dataBuffer.toString())) } catch (error) {
+  try { await onData(store, JSON.parse(dataBuffer.toString())) } catch (error) {
     __DEV__ && console.log('[enableProtocolTextJSON]', error)
     webSocket.close(1000, error.toString())
   }
 })
 
-const enableProtocolBufferPacket = (store, onData) => store.webSocket.on(WEB_SOCKET_EVENT_MAP.FRAME, (webSocket, { dataType, dataBuffer }) => {
+const enableProtocolBufferPacket = (store, onData) => store.webSocket.on(WEB_SOCKET_EVENT_MAP.FRAME, async (webSocket, { dataType, dataBuffer }) => {
   __DEV__ && console.log(`>> FRAME:`, dataType, dataBuffer.length, dataBuffer.toString().slice(0, 20))
   if (dataType !== DATA_TYPE_MAP.OPCODE_BINARY) return webSocket.close(1000, 'OPCODE_BINARY opcode expected')
-  try { onData(store, parseBufferPacket(dataBuffer)) } catch (error) {
+  try { await onData(store, parseBufferPacket(dataBuffer)) } catch (error) {
     __DEV__ && console.log('[enableProtocolBufferPacket]', error)
     webSocket.close(1000, error.toString())
   }
@@ -40,7 +40,7 @@ const PROTOCOL_MAP = {
     __DEV__ && console.log('[echo-packet]', { type, payload }, payloadBuffer.length)
     store.webSocket.sendBuffer(packBufferPacket(headerString, payloadBuffer))
   }),
-  'group-text-json': (store) => enableProtocolTextJSON(store, (store, { type, payload }) => {
+  'group-text-json': (store) => enableProtocolTextJSON(store, (store, { type, payload }) => { // test for chat room
     if (type === 'close') return store.webSocket.close(1000, 'CLOSE received')
     const text = JSON.stringify({ type, payload })
     store.groupSet.forEach((webSocket) => webSocket !== store.webSocket && webSocket.sendText(text))
@@ -48,11 +48,28 @@ const PROTOCOL_MAP = {
 }
 const PROTOCOL_TYPE_SET = new Set(Object.keys(PROTOCOL_MAP))
 
+const AUTH_PROTOCOL_MAP = {
+  ...PROTOCOL_MAP,
+  'upload-buffer-packet': (store) => enableProtocolBufferPacket(store, async (store, [ headerString, payloadBuffer ]) => {
+    __DEV__ && console.log('[upload-buffer-packet] get', headerString)
+    const { type, payload } = JSON.parse(headerString)
+    if (type === 'close') return store.webSocket.close(1000, 'CLOSE received')
+    __DEV__ && console.log('[upload-buffer-packet]', { type, payload }, payloadBuffer.length)
+
+    const { user } = store.getState()
+
+    await saveBufferToFile(pathUser, `/${user.id}/upload/${payload.fileName}`, payloadBuffer)
+
+    store.webSocket.sendBuffer(packBufferPacket(headerString, payloadBuffer))
+  })
+}
+const AUTH_PROTOCOL_TYPE_SET = new Set(Object.keys(AUTH_PROTOCOL_MAP))
+
 const DEFAULT_FRAME_LENGTH_LIMIT = 2 * 1024 * 1024 // 2 MiB
 const AUTH_FRAME_LENGTH_LIMIT = 32 * 1024 * 1024 // 32 MiB
 const REGEXP_AUTH_TOKEN = /auth-token!(.+)/
 
-const applyWebSocketServer = (server, firebaseAdminApp) => {
+const applyWebSocketServer = ({ server, baseUrl, firebaseAdminApp, pathUser }) => {
   const responderUpdateRequest = (store) => {
     const { origin, protocolList, isSecure } = store.webSocket
     __DEV__ && console.log('[responderUpdateRequest]', { origin, protocolList, isSecure }, store.bodyHeadBuffer.length)
@@ -69,20 +86,20 @@ const applyWebSocketServer = (server, firebaseAdminApp) => {
     let protocol = null
     let authToken = null
     for (const protocolString of protocolList) {
-      if (!protocol && PROTOCOL_TYPE_SET.has(protocolString)) protocol = protocolString
+      if (!protocol && AUTH_PROTOCOL_TYPE_SET.has(protocolString)) protocol = protocolString
       if (!authToken && REGEXP_AUTH_TOKEN.test(protocolString)) authToken = decodeURIComponent(REGEXP_AUTH_TOKEN.exec(protocolString)[ 1 ])
       if (protocol && authToken) break
     }
-    __DEV__ && !protocol && console.log('[responderUpdateRequest] no valid protocol', protocolList)
-    __DEV__ && !authToken && console.log('[responderUpdateRequest] no valid authToken', protocolList)
+    __DEV__ && !protocol && console.log('[responderUpdateRequestAuth] no valid protocol', protocolList)
+    __DEV__ && !authToken && console.log('[responderUpdateRequestAuth] no valid authToken', protocolList)
     if (!protocol || !authToken) return
     await responderAuthVerifyToken(store, firebaseAdminApp, authToken)
     authToken && store.setState({ user: { test: 'test', authToken } })
-    __DEV__ && !store.getState().user && console.log('[responderUpdateRequest] failed to verify authToken', authToken)
+    __DEV__ && !store.getState().user && console.log('[responderUpdateRequestAuth] failed to verify authToken', authToken)
     if (!store.getState().user) return
     store.webSocket.setFrameLengthLimit(AUTH_FRAME_LENGTH_LIMIT)
     store.setState({ protocol })
-    PROTOCOL_MAP[ protocol ](store)
+    AUTH_PROTOCOL_MAP[ protocol ](store)
     __DEV__ && store.webSocket.on(WEB_SOCKET_EVENT_MAP.OPEN, () => console.log(`[responderUpdateRequestAuth] >> OPEN, ${protocol}, current active: ${webSocketSet.size} (self excluded)`))
   }
 
@@ -114,7 +131,7 @@ const applyWebSocketServer = (server, firebaseAdminApp) => {
     server,
     onUpgradeRequest: createUpdateRequestListener({
       responderList: [
-        createResponderParseURL(),
+        createResponderParseURL(baseUrl),
         createResponderRouter(routerMapBuilder.getRouterMap())
       ]
     }),
