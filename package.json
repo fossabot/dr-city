@@ -1,6 +1,6 @@
 {
   "name": "dr-city",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "dr-js",
   "license": "MIT",
   "description": "Server of Dr.city",
@@ -17,32 +17,30 @@
   "bugs": {
     "url": "https://github.com/dr-js/dr-city/issues"
   },
-  "bin": "bin/index.js",
   "main": "library/index.js",
   "scripts": {
     "perf-webpack-stats": "cross-env NODE_ENV=production webpack --config config/library.conf.js --json > stats.json",
     "perf-webpack-stats-pack": "cross-env NODE_ENV=production webpack --config pack/config/library.conf.js --json > pack-stats.json",
     "example": "cross-env NODE_ENV=development webpack --watch --config config/example.conf.js",
-    "library": "cross-env NODE_ENV=production webpack --config config/library.conf.js",
-    "pack-example": "cross-env NODE_ENV=development webpack --watch --config pack/config/example.conf.js",
-    "pack-example-dll": "cross-env NODE_ENV=development webpack --watch --config pack/config/example-dll.conf.js",
-    "pack-library": "cross-env NODE_ENV=production webpack --config pack/config/library.conf.js --progress=true",
-    "pack-library-dll": "cross-env NODE_ENV=production webpack --config pack/config/library-dll.conf.js --progress=true",
-    "build": "npm run library",
-    "prepare": "npm run build"
+    "example-pack": "cross-env NODE_ENV=development webpack --watch --config pack/config/example.conf.js",
+    "example-pack-dll": "cross-env NODE_ENV=development webpack --watch --config pack/config/example-dll.conf.js",
+    "library": "cross-env NODE_ENV=production webpack --config config/library.conf.js --progress=true",
+    "library-pack": "cross-env NODE_ENV=production webpack --config pack/config/library.conf.js --progress=true",
+    "library-pack-dll": "cross-env NODE_ENV=production webpack --config pack/config/library-dll.conf.js --progress=true",
+    "build": "npm run library-pack-dll && npm run library-pack && npm run library"
   },
   "engines": {
-    "node": "8.x",
-    "npm": "5.x"
+    "node": ">=8.5.0",
+    "npm": ">=5.4.0"
   },
   "devDependencies": {
-    "dev-dep-web-react": "^0.0.3",
-    "dr-js": "^0.2.6",
-    "firebase": "^4.3.1",
-    "firebase-admin": "^5.2.1",
-    "material-ui": "^1.0.0-beta.11",
-    "prop-types": "^15.5.10",
-    "react": "^15.6.1",
-    "react-dom": "^15.6.1"
+    "dev-dep-web-react": "^0.0.6",
+    "dr-js": "^0.4.2",
+    "firebase": "^4.6.1",
+    "firebase-admin": "^5.4.3",
+    "material-ui": "^1.0.0-beta.19",
+    "prop-types": "^15.6.0",
+    "react": "^16.0.0",
+    "react-dom": "^16.0.0"
   }
 }
