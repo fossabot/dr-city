@@ -2,22 +2,24 @@ import React, { PureComponent } from 'react'
 import PropTypes from 'prop-types'
 import {
   Grid, Card, CardContent, CardHeader, CardActions,
-  Avatar, Button, Typography
+  Avatar, Button, Typography,
+  withStyles
 } from 'material-ui'
-
+import { getLogStyle } from 'theme/style'
 import { GridContainer } from 'view/__utils__'
 
-class Auth extends PureComponent {
+class AuthComponent extends PureComponent {
   static propTypes = {
     authState: PropTypes.object,
     doAuthGrantGoogle: PropTypes.func,
     doAuthGrantGithub: PropTypes.func,
     doAuthRevoke: PropTypes.func,
-    doAuthCheck: PropTypes.func
+    doAuthCheck: PropTypes.func,
+    classes: PropTypes.object.isRequired
   }
 
   render () {
-    const { authState: { user, authCheckResultText = '' }, doAuthGrantGoogle, doAuthGrantGithub, doAuthRevoke, doAuthCheck } = this.props
+    const { authState: { user, authCheckResultText = '' }, doAuthGrantGoogle, doAuthGrantGithub, doAuthRevoke, doAuthCheck, classes } = this.props
     const isAuth = Boolean(user)
     const userAvatar = isAuth
       ? <Avatar src={user.photoURL || null}>
@@ -30,8 +32,8 @@ class Auth extends PureComponent {
           <CardHeader title={isAuth ? user.displayName : blankSpan} subheader={isAuth ? user.email : blankSpan} avatar={userAvatar} />
           <CardContent>
             <Typography paragraph>{isAuth ? `Signed in with ${user.providerId}` : 'Not signed in'}</Typography>
-            <Typography paragraph>{authCheckResultText || ''}</Typography>
           </CardContent>
+          {authCheckResultText && <Grid component="pre" className={classes.log}>{authCheckResultText}</Grid>}
           <CardActions>
             {!isAuth && <Button color="primary" onClick={doAuthGrantGoogle}>Sign in with Google</Button>}
             {!isAuth && <Button color="primary" onClick={doAuthGrantGithub}>Sign in with GitHub</Button>}
@@ -43,6 +45,10 @@ class Auth extends PureComponent {
     </GridContainer>
   }
 }
+
+const Auth = withStyles((theme) => ({
+  log: getLogStyle(theme)
+}))(AuthComponent)
 
 const blankSpan = <span>&nbsp;</span>
 

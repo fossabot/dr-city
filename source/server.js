@@ -2,7 +2,7 @@ import nodeModulePath from 'path'
 import nodeModuleFs from 'fs'
 import { promisify } from 'util'
 import { Common, Node } from 'dr-js/module/Dr.node'
-import { createStatisticLogger, wrapSetHSTS, wrapSetCacheControl } from './__utils__'
+import { createServerLogger, wrapSetHSTS, wrapSetCacheControl } from './__utils__'
 import { initFirebaseAdminApp, responderAuthVerifyToken, applyWebSocketServer } from './Responder'
 import { createResponderTask } from './Task'
 import { createResponderRenderView } from './View'
@@ -34,7 +34,7 @@ const configureServer = async ({
   protocol, hostname, port,
   fileSSLKey, fileSSLCert, fileSSLChain, fileSSLDHParam,
   fileFirebaseAdminToken, filePid,
-  pathResource, pathStatic, pathUser, pathLog, logFilePrefix
+  pathResource, pathShare, pathUser, pathLog, logFilePrefix
 }) => {
   const packManifestMap = {
     ...JSON.parse(await readFileAsync(nodeModulePath.join(pathResource, 'pack/manifest/main.json'), 'utf8')),
@@ -42,18 +42,17 @@ const configureServer = async ({
     ...JSON.parse(await readFileAsync(nodeModulePath.join(pathResource, 'pack/manifest/dll-vendor-firebase.json'), 'utf8'))
   }
   const firebaseAdminApp = initFirebaseAdminApp(JSON.parse(await readFileAsync(fileFirebaseAdminToken, 'utf8')))
-
-  const { logStatistic, endStatistic } = await createStatisticLogger({ logRoot: pathLog, logFilePrefix })
+  const serverLogger = await createServerLogger({ pathLogDirectory: pathLog, prefixLogFile: logFilePrefix })
 
   setProcessExitListener({
     listenerAsync: async ({ eventType, ...exitState }) => {
       __DEV__ && console.log('listenerAsync', eventType, exitState)
-      logStatistic(`${clock()} [SERVER DOWN] eventType: ${eventType}, exitState: ${JSON.stringify(exitState)}`)
+      serverLogger.add(`${clock()} [SERVER DOWN] eventType: ${eventType}, exitState: ${JSON.stringify(exitState)}`)
     },
     listenerSync: ({ eventType, code }) => {
       __DEV__ && console.log('listenerSync', eventType, code)
-      logStatistic(`${clock()} [SERVER EXIT] eventType: ${eventType}, code: ${code}`)
-      endStatistic()
+      serverLogger.add(`${clock()} [SERVER EXIT] eventType: ${eventType}, code: ${code}`)
+      serverLogger.end()
       try { filePid && nodeModuleFs.unlinkSync(filePid) } catch (error) { __DEV__ && console.log('remove pid file', error) }
     }
   })
@@ -67,27 +66,27 @@ const configureServer = async ({
   const responderLogEnd = createResponderLogEnd((data, state) => {
     __DEV__ && state.error && console.error(state.error)
     const errorLog = state.error ? ` [ERROR] ${data.finished ? 'finished' : 'not-finished'} ${state.error}` : ''
-    logStatistic(`${state.time} [END] ${Format.time(data.duration)} ${data.statusCode}${errorLog}`)
+    serverLogger.add(`${state.time} [END] ${Format.time(data.duration)} ${data.statusCode}${errorLog}`)
   })
   const responderTask = createResponderTask({
-    staticRoot: pathStatic,
+    staticRoot: pathShare,
     staticRoutePrefix: '/s',
     serveCacheMap
   })
   const responderRenderView = createResponderRenderView({
-    getStatic: (path) => `/s/${path}`,
-    getPack: (path) => `/r/pack/${packManifestMap[ path ]}`,
     route: '/v',
-    staticRoot: pathStatic,
-    staticRoutePrefix: '/s',
+    getResource: (path) => `/r/${path}`,
+    getShare: (path) => `/s/${path}`,
+    getUser: (userId, path) => `/u/${userId}/${path}`,
+    getPack: (path) => `/r/pack/${packManifestMap[ path ]}`,
     serveCacheMap
   })
   const responderServeStaticResource = wrapSetCacheControl(createResponderServeStatic({ staticRoot: pathResource, isEnableGzip: true, expireTime: CACHE_EXPIRE_TIME, serveCacheMap }))
-  const responderServeStaticStatic = wrapSetCacheControl(createResponderServeStatic({ staticRoot: pathStatic, isEnableGzip: true, expireTime: CACHE_EXPIRE_TIME, serveCacheMap }))
+  const responderServeStaticShare = wrapSetCacheControl(createResponderServeStatic({ staticRoot: pathShare, isEnableGzip: true, expireTime: CACHE_EXPIRE_TIME, serveCacheMap }))
   const responderServeStaticUser = wrapSetCacheControl(createResponderServeStatic({ staticRoot: pathUser, isEnableGzip: true, expireTime: CACHE_EXPIRE_TIME, serveCacheMap }))
   const routeProcessorFavicon = (store) => {
     store.setState({ filePath: 'favicon.ico' })
-    return responderServeStaticStatic(store)
+    return responderServeStaticShare(store)
   }
 
   // set router
@@ -104,7 +103,13 @@ const configureServer = async ({
   })
   routerMapBuilder.addRoute('/s/*', 'GET', (store) => {
     store.setState({ filePath: store.getState().paramMap[ routerMapBuilder.ROUTE_ANY ] })
-    return responderServeStaticStatic(store)
+    return responderServeStaticShare(store)
+  })
+  routerMapBuilder.addRoute('/u/*', 'GET', async (store) => {
+    await responderAuthVerifyToken(store, firebaseAdminApp, store.request.headers[ 'auth-token' ])
+    const { user, paramMap } = store.getState()
+    store.setState({ filePath: nodeModulePath.join(user.id, paramMap[ routerMapBuilder.ROUTE_ANY ]) })
+    return responderServeStaticUser(store)
   })
   routerMapBuilder.addRoute('/t/*', 'GET', (store) => {
     store.setState({ taskKey: `task:${store.getState().paramMap[ routerMapBuilder.ROUTE_ANY ]}` })
@@ -117,12 +122,6 @@ const configureServer = async ({
   routerMapBuilder.addRoute('/auth-check', 'GET', async (store) => {
     await responderAuthVerifyToken(store, firebaseAdminApp, store.request.headers[ 'auth-token' ])
     store.response.write(`verified user: ${JSON.stringify(store.getState().user)}`)
-  })
-  routerMapBuilder.addRoute('/a/r/*', 'GET', async (store) => {
-    await responderAuthVerifyToken(store, firebaseAdminApp, store.request.headers[ 'auth-token' ])
-    const { user, paramMap } = store.getState()
-    store.setState({ filePath: nodeModulePath.join(user.id, paramMap[ routerMapBuilder.ROUTE_ANY ]) })
-    return responderServeStaticUser(store)
   })
 
   // create server
@@ -138,9 +137,9 @@ const configureServer = async ({
 
   server.on('request', createRequestListener({
     responderList: [
-      createResponderLogRequestHeader((data, state) => logStatistic(`${state.time} [REQUEST] ${data.method} ${data.host} ${data.url} ${data.remoteAddress} ${data.remotePort} ${data.userAgent}`)),
+      createResponderLogRequestHeader((data, state) => serverLogger.add(`${state.time} [REQUEST] ${data.method} ${data.host} ${data.url} ${data.remoteAddress} ${data.remotePort} ${data.userAgent}`)),
       createResponderParseURL(baseUrl),
-      // createResponderLogTimeStep((stepTime, state) => logStatistic(`${state.time} [STEP] ${Format.time(stepTime)}`)),
+      // createResponderLogTimeStep((stepTime, state) => serverLogger.add(`${state.time} [STEP] ${Format.time(stepTime)}`)),
       protocol === 'https:'
         ? wrapSetHSTS(createResponderRouter(routerMapBuilder.getRouterMap()))
         : createResponderRouter(routerMapBuilder.getRouterMap())
@@ -156,7 +155,7 @@ const configureServer = async ({
 
   filePid && nodeModuleFs.writeFileSync(filePid, `${process.pid}`)
 
-  logStatistic(`${clock()} [SERVER UP] server config: ${JSON.stringify({ hostname, port })}`)
+  serverLogger.add(`${clock()} [SERVER UP] server config: ${JSON.stringify({ hostname, port })}`)
 
   return { server, start, stop }
 }

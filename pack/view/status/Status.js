@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react'
 import PropTypes from 'prop-types'
 import { Card, CardHeader, Grid, Snackbar, Button, withStyles } from 'material-ui'
+import { getLogStyle } from 'theme/style'
 import { GridContainer } from 'view/__utils__'
 
 class StatusComponent extends PureComponent {
@@ -58,7 +59,7 @@ class StatusComponent extends PureComponent {
 }
 
 const Status = withStyles((theme) => ({
-  log: { overflow: 'auto', padding: '16px', maxHeight: '360px', fontSize: '14px', background: theme.palette.secondary[ 100 ] }
+  log: getLogStyle(theme)
 }))(StatusComponent)
 
 export { Status }

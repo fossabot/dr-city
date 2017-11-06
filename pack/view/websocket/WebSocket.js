@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react'
 import PropTypes from 'prop-types'
 import { Card, CardContent, CardActions, Grid, Button, TextField, Typography, withStyles } from 'material-ui'
+import { getLogStyle } from 'theme/style'
 import { GridContainer } from 'view/__utils__'
 
 class WebSocketComponent extends PureComponent {
@@ -89,7 +90,7 @@ class WebSocketComponent extends PureComponent {
 }
 
 const WebSocket = withStyles((theme) => ({
-  log: { overflow: 'auto', padding: '8px', minHeight: '60px', maxHeight: '360px', background: theme.palette.secondary[ 100 ] }
+  log: getLogStyle(theme)
 }))(WebSocketComponent)
 
 export { WebSocket }

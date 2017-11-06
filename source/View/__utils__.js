@@ -1,13 +1,13 @@
 const DOCTYPE_HTML = '<!DOCTYPE html>'
 
-const COMMON_HEAD_CONTENT = ({ getStatic }) => `<meta charset="utf-8">
+const COMMON_HEAD_CONTENT = ({ getResource }) => `<meta charset="utf-8">
 <meta name="viewport" content="initial-scale=1, maximum-scale=5, minimum-scale=1, width=device-width">
 <meta name="theme-color" content="#63aeff">
-<link rel="manifest" href="${getStatic('manifest.json')}">
-<link rel="shortcut icon" href="${getStatic('favicon.ico')}">
-${__DEV__ ? '' : `<link rel="preload" href="${getStatic('material/Material-Icons.woff2')}" as="font" type="font/woff2">
-<link rel="preload" href="${getStatic('material/Roboto-Regular.woff2')}" as="font" type="font/woff2">
-<link rel="preload" href="${getStatic('material/Roboto-Medium.woff2')}" as="font" type="font/woff2">`}`
+<link rel="manifest" href="${getResource('manifest.json')}">
+<link rel="shortcut icon" href="${getResource('favicon.ico')}">
+${__DEV__ ? '' : `<link rel="preload" href="${getResource('material/Material-Icons.woff2')}" as="font" type="font/woff2">
+<link rel="preload" href="${getResource('material/Roboto-Regular.woff2')}" as="font" type="font/woff2">
+<link rel="preload" href="${getResource('material/Roboto-Medium.woff2')}" as="font" type="font/woff2">`}`
 
 const STYLE_RESET = () => `<style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -23,7 +23,7 @@ const getRender = ({ title, packScriptList, packStyleList }) => (data) => `${DOC
 <head>
   ${COMMON_HEAD_CONTENT(data)}
   ${STYLE_RESET(data)}
-  <link rel="stylesheet" href="${data.getStatic('material/index.css')}" />
+  <link rel="stylesheet" href="${data.getResource('material/index.css')}" />
   ${packStyleList.map((packStyle) => `<link rel="stylesheet" href="${data.getPack(packStyle)}" />`).join('\n')}
   <title>${title}</title>
 </head>

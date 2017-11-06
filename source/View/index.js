@@ -12,7 +12,7 @@ const { createResponderBufferCache } = Node.Server.Responder
 
 const CACHE_EXPIRE_TIME = __DEV__ ? 0 : 60 * 1000 // in msec, 1min
 
-const createResponderRenderView = ({ getStatic, getPack, route, staticRoot, staticRoutePrefix, serveCacheMap }) => {
+const createResponderRenderView = ({ route, getResource, getShare, getUser, getPack, serveCacheMap }) => {
   const renderKeyMap = new Map()
   renderKeyMap.set('view:default', renderDefault)
   renderKeyMap.set('view:home', renderHome)
@@ -21,7 +21,7 @@ const createResponderRenderView = ({ getStatic, getPack, route, staticRoot, stat
   renderKeyMap.set('view:test-auth', renderAuth)
   renderKeyMap.set('view:test-websocket', renderWebSocket)
 
-  const data = { getStatic, getPack, route, staticRoot, staticRoutePrefix, viewKeyList: Array.from(renderKeyMap.keys()) }
+  const data = { route, viewKeyList: Array.from(renderKeyMap.keys()), getResource, getShare, getUser, getPack }
 
   return createResponderBufferCache({
     getKey: (store) => {

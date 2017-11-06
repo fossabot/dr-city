@@ -38,7 +38,7 @@ const OPTION_CONFIG = {
           ]
         },
         { name: 'path-resource', ...CommonSingleStringPathFormat },
-        { name: 'path-static', optional: checkModeServerOption, ...CommonSingleStringPathFormat },
+        { name: 'path-share', optional: checkModeServerOption, ...CommonSingleStringPathFormat },
         { name: 'path-user', optional: checkModeServerOption, ...CommonSingleStringPathFormat },
         {
           name: 'path-log',

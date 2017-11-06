@@ -47,7 +47,7 @@ const main = async () => {
       fileFirebaseAdminToken: getSingleOption('file-firebase-admin-token'),
       filePid: getSingleOptionOptional('file-pid'),
       pathResource,
-      pathStatic: getSingleOption('path-static'),
+      pathShare: getSingleOption('path-share'),
       pathUser: getSingleOption('path-user'),
       pathLog: getSingleOptionOptional('path-log'),
       logFilePrefix: getSingleOptionOptional('prefix-log-file')
