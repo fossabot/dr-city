@@ -38,9 +38,9 @@ class StatusComponent extends PureComponent {
 
   renderStatusCard ({ config, status }, index) {
     const { classes } = this.props
-    if (!status) return <Grid key={index} item xs={12} sm={6}><Card><CardHeader title={config.name} subheader={config.command} /></Card></Grid>
+    if (!status) return <Grid key={index} item xs={12} sm={8}><Card><CardHeader title={config.name} subheader={config.command} /></Card></Grid>
     const { code, signal, stdoutString, stderrString } = status
-    return <Grid key={index} item xs={12} sm={6}><Card>
+    return <Grid key={index} item xs={12} sm={8}><Card>
       <CardHeader title={config.name} subheader={config.command} />
       {code !== 0 && <Grid component="pre" className={classes.log}>[{code}] {signal || ''}</Grid>}
       {stdoutString && <Grid component="pre" className={classes.log}>{stdoutString}</Grid>}
@@ -58,7 +58,7 @@ class StatusComponent extends PureComponent {
 }
 
 const Status = withStyles((theme) => ({
-  log: { overflow: 'auto', padding: '16px', height: '360px', fontSize: '14px', background: theme.palette.secondary[ 100 ] }
+  log: { overflow: 'auto', padding: '16px', maxHeight: '360px', fontSize: '14px', background: theme.palette.secondary[ 100 ] }
 }))(StatusComponent)
 
 export { Status }

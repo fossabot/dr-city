@@ -25,7 +25,7 @@ class Auth extends PureComponent {
       </Avatar>
       : <Avatar>?</Avatar>
     return <GridContainer>
-      <Grid item xs={12} sm={6} lg={3}>
+      <Grid item xs={12} sm={8} lg={6}>
         <Card>
           <CardHeader title={isAuth ? user.displayName : blankSpan} subheader={isAuth ? user.email : blankSpan} avatar={userAvatar} />
           <CardContent>

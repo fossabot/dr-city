@@ -9,7 +9,7 @@ const { File: { createDirectory }, Module: { createLogger } } = Node
 const DEFAULT_LOG_LENGTH_THRESHOLD = 1024
 const LOG_FILE_SPLIT_INTERVAL = 24 * 60 * 60 * 1000 // 24hour
 
-const createStatisticLogger = async ({ logRoot = '', logFilePrefix = '', logLengthThreshold = DEFAULT_LOG_LENGTH_THRESHOLD }) => {
+const createStatisticLogger = async ({ logRoot = '', logFilePrefix = '', queueLengthThreshold = DEFAULT_LOG_LENGTH_THRESHOLD }) => {
   if (!logRoot) {
     __DEV__ && console.log('[Logger] output to console.log')
     return { logStatistic: console.log, endStatistic: () => {} }
@@ -19,7 +19,7 @@ const createStatisticLogger = async ({ logRoot = '', logFilePrefix = '', logLeng
 
   const resetLogger = () => {
     logger && logger.end()
-    logger = createLogger({ logFilePath: nodeModulePath.join(logRoot, `${logFilePrefix}${getRandomId()}.log`), logLengthThreshold })
+    logger = createLogger({ pathOutputFile: nodeModulePath.join(logRoot, `${logFilePrefix}${getRandomId()}.log`), queueLengthThreshold })
   }
   let logger = null
   let token = setInterval(resetLogger, LOG_FILE_SPLIT_INTERVAL)
@@ -28,7 +28,7 @@ const createStatisticLogger = async ({ logRoot = '', logFilePrefix = '', logLeng
   return {
     logStatistic: (...args) => {
       __DEV__ && console.log(...args)
-      logger && logger.log(...args)
+      logger && logger.add(...args)
     },
     endStatistic: () => {
       token && clearInterval(token)

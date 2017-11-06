@@ -43,7 +43,7 @@ const DLL_NAME_MAP = {
 }
 
 const getConfig = ({ pathOutput }) => [
-  GET_CONFIG_DLL(pathOutput, DLL_NAME_MAP.VENDOR, [ 'dr-js/module/Dr.browser', 'react', 'react-dom', 'prop-types', 'material-ui' ], true),
+  GET_CONFIG_DLL(pathOutput, DLL_NAME_MAP.VENDOR, [ 'babel-polyfill', 'dr-js/module/Dr.browser', 'react', 'react-dom', 'prop-types', 'material-ui' ], true),
   GET_CONFIG_DLL(pathOutput, DLL_NAME_MAP.VENDOR_FIREBASE, [ 'firebase/app', 'firebase/auth' ], false) // TODO: minification error: https://github.com/firebase/firebase-js-sdk/issues/154
 ]
 

@@ -37,7 +37,7 @@ const configureServer = async ({
   pathResource, pathStatic, pathUser, pathLog, logFilePrefix
 }) => {
   const packManifestMap = {
-    ...JSON.parse(await readFileAsync(nodeModulePath.join(pathResource, 'pack/manifest/common.json'), 'utf8')),
+    ...JSON.parse(await readFileAsync(nodeModulePath.join(pathResource, 'pack/manifest/main.json'), 'utf8')),
     ...JSON.parse(await readFileAsync(nodeModulePath.join(pathResource, 'pack/manifest/dll-vendor.json'), 'utf8')),
     ...JSON.parse(await readFileAsync(nodeModulePath.join(pathResource, 'pack/manifest/dll-vendor-firebase.json'), 'utf8'))
   }

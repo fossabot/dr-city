@@ -5,7 +5,7 @@ import { GridContainer } from 'view/__utils__'
 class Home extends PureComponent {
   render () {
     return <GridContainer>
-      <Grid item xs={12} sm={6} lg={3}>
+      <Grid item xs={12} sm={8} lg={6}>
         <Card>
           <CardContent>
             <Typography paragraph>Welcome !</Typography>

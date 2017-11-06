@@ -57,7 +57,7 @@ class WebSocketComponent extends PureComponent {
     const hasTextJSONWebSocket = Boolean(textJSONWebSocket)
     const hasBufferPacketSocket = Boolean(bufferPacketWebSocket)
     return <GridContainer>
-      <Grid item xs={12} sm={6}><Card>
+      <Grid item xs={12} lg={6}><Card>
         <CardContent>
           <Typography type="title" className={classes.title}>Text JSON</Typography>
           <TextField inputRef={this.setTextJSONTypeRef} label="Type" placeholder="data-type" margin="normal" fullWidth />
@@ -70,7 +70,7 @@ class WebSocketComponent extends PureComponent {
           <Button onClick={logTextJSONReset} disabled={!textJSONLog}>Clear Log</Button>
         </CardActions>
       </Card></Grid>
-      <Grid item xs={12} sm={6}><Card>
+      <Grid item xs={12} lg={6}><Card>
         <CardContent>
           <Typography type="title" className={classes.title}>Buffer Packet</Typography>
           <TextField inputRef={this.setBufferPacketTypeRef} label="Type" placeholder="data-type" margin="normal" fullWidth />

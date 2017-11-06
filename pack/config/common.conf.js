@@ -13,20 +13,23 @@ const IS_PRODUCTION = NODE_ENV === 'production'
 const OPTIONS = {
   BABEL_LOADER: {
     babelrc: false,
-    presets: [ [ 'env', { targets: IS_PRODUCTION ? '>= 5%' : { browser: 'last 2 Chrome versions' }, modules: false } ], 'react' ],
+    presets: [ [ 'env', { targets: IS_PRODUCTION ? '>= 5%' : 'last 2 Chrome versions', modules: false } ], 'react' ],
     plugins: [ 'transform-class-properties', [ 'transform-object-rest-spread', { useBuiltIns: true } ] ]
   },
   CSS_LOADER: { localIdentName: IS_PRODUCTION ? '[hash:base64:12]' : '[name]_[local]_[hash:base64:5]' }
 }
 
 const getConfig = ({ pathOutput }) => ({
-  entry: {
+  entry: Object.entries({
     'home': 'view/home',
     'status': 'view/status',
     'file': 'view/file',
     'auth': 'view/auth',
     'websocket': 'view/websocket'
-  },
+  }).reduce((o, [ key, value ]) => {
+    o[ key ] = [ 'babel-polyfill', value ]
+    return o
+  }, {}),
   output: {
     path: pathOutput,
     filename: IS_PRODUCTION ? '[name]-[chunkhash:8].js' : '[name].js'
@@ -53,7 +56,7 @@ const getConfig = ({ pathOutput }) => ({
     new DllReferencePlugin({ context: '.', manifest: require(nodeModulePath.resolve(pathOutput, `dll-manifest/${DLL_NAME_MAP.VENDOR}.json`)) }),
     new DllReferencePlugin({ context: '.', manifest: require(nodeModulePath.resolve(pathOutput, `dll-manifest/${DLL_NAME_MAP.VENDOR_FIREBASE}.json`)) }),
     new CommonsChunkPlugin({ name: 'runtime' }),
-    new ManifestPlugin({ fileName: 'manifest/common.json' }),
+    new ManifestPlugin({ fileName: 'manifest/main.json' }),
     ...(IS_PRODUCTION ? [
       new ModuleConcatenationPlugin(),
       new MinifyPlugin(),

@@ -2080,9 +2080,9 @@ dot-prop@^4.1.0:
   dependencies:
     is-obj "^1.0.0"
 
-dr-js@^0.4.2:
-  version "0.4.2"
-  resolved "https://registry.yarnpkg.com/dr-js/-/dr-js-0.4.2.tgz#cb1f4d3be166d1f7ac7a03c2f3dcc494d3a4f3cc"
+dr-js@^0.4.3:
+  version "0.4.3"
+  resolved "https://registry.yarnpkg.com/dr-js/-/dr-js-0.4.3.tgz#c70e449ff6c7afbf8afe934657727a3b720158a0"
 
 duplexify@^3.1.2, duplexify@^3.5.0, duplexify@^3.5.1:
   version "3.5.1"

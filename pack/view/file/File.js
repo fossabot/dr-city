@@ -36,7 +36,7 @@ class File extends PureComponent {
   render () {
     const { staticRoutePrefix, relativeFilePathList } = this.state
     return <GridContainer>
-      <Grid item xs={12} sm={6}><Card>
+      <Grid item xs={12} sm={8}><Card>
         {relativeFilePathList.length !== 0 && <List dense>{
           relativeFilePathList.map((relativeFilePath) => renderTagLink(
             (REGEXP_EXTNAME.exec(relativeFilePath) || ' ')[ 0 ].slice(1).toUpperCase(),

@@ -3,11 +3,11 @@ const DOCTYPE_HTML = '<!DOCTYPE html>'
 const COMMON_HEAD_CONTENT = ({ getStatic }) => `<meta charset="utf-8">
 <meta name="viewport" content="initial-scale=1, maximum-scale=5, minimum-scale=1, width=device-width">
 <meta name="theme-color" content="#63aeff">
-<link rel="manifest" href="/r/static/manifest.json">
+<link rel="manifest" href="${getStatic('manifest.json')}">
 <link rel="shortcut icon" href="${getStatic('favicon.ico')}">
-<link rel="preload" href="/r/static/material/Material-Icons.woff2" as="font" type="application/font-woff2">
-<link rel="preload" href="/r/static/material/Roboto-Regular.woff2" as="font" type="application/font-woff2">
-<link rel="preload" href="/r/static/material/Roboto-Medium.woff2" as="font" type="application/font-woff2">`
+${__DEV__ ? '' : `<link rel="preload" href="${getStatic('material/Material-Icons.woff2')}" as="font" type="font/woff2">
+<link rel="preload" href="${getStatic('material/Roboto-Regular.woff2')}" as="font" type="font/woff2">
+<link rel="preload" href="${getStatic('material/Roboto-Medium.woff2')}" as="font" type="font/woff2">`}`
 
 const STYLE_RESET = () => `<style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
