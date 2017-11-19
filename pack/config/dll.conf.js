@@ -12,7 +12,7 @@ const GET_CONFIG_DLL = (pathOutput, dllName, dllEntryChunks, isMinify) => {
   const libraryName = `__${dllName.replace(/[^\w]/g, '_').toUpperCase()}__`
   return {
     bail: IS_PRODUCTION, // Don't attempt to continue if there are any errors.
-    devtool: IS_PRODUCTION ? 'source-map' : false,
+    // devtool: IS_PRODUCTION ? 'source-map' : false, // TODO: Wait for: https://github.com/webpack/webpack-sources/issues/28
     entry: { [dllName]: dllEntryChunks },
     output: {
       library: libraryName,

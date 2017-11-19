@@ -1,4 +1,5 @@
 # source files
+**/*-gitignore/**
 /.*
 /*.tgz
 /library/*.map
@@ -6,4 +7,3 @@
 /source
 /example
 /pack
-/stats.json

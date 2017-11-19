@@ -19,17 +19,19 @@ const OPTIONS = {
   CSS_LOADER: { localIdentName: IS_PRODUCTION ? '[hash:base64:12]' : '[name]_[local]_[hash:base64:5]' }
 }
 
+const addEntryPolyfill = (entry) => Object.entries(entry).reduce((o, [ key, value ]) => {
+  o[ key ] = [ 'babel-polyfill', value ]
+  return o
+}, {})
+
 const getConfig = ({ pathOutput }) => ({
-  entry: Object.entries({
+  entry: addEntryPolyfill({
     'home': 'view/home',
     'status': 'view/status',
     'file': 'view/file',
     'auth': 'view/auth',
     'websocket': 'view/websocket'
-  }).reduce((o, [ key, value ]) => {
-    o[ key ] = [ 'babel-polyfill', value ]
-    return o
-  }, {}),
+  }),
   output: {
     path: pathOutput,
     filename: IS_PRODUCTION ? '[name]-[chunkhash:8].js' : '[name].js'

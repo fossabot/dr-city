@@ -13,6 +13,8 @@ const BABEL_OPTIONS = {
 }
 
 module.exports = {
+  bail: IS_PRODUCTION, // Don't attempt to continue if there are any errors.
+  // devtool: IS_PRODUCTION ? 'source-map' : false, // TODO: Wait for: https://github.com/webpack/webpack-sources/issues/28
   entry: { 'index': 'source/index' },
   resolve: { alias: { source: nodeModulePath.resolve(__dirname, '../source') } },
   target: 'node', // support node main modules like 'fs'
