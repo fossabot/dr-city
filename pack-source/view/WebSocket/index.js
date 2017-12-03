@@ -1,0 +1,32 @@
+import React, { PureComponent } from 'react'
+import PropTypes from 'prop-types'
+import { Grid, withStyles } from 'material-ui'
+import { LogStyle } from 'pack-source/theme/style'
+import { GridContainer } from 'pack-source/view/Layout'
+import { WebSocketTextJSON } from './WebSocketTextJSON'
+import { WebSocketBinaryPacket } from './WebSocketBinaryPacket'
+
+class WebSocketComponent extends PureComponent {
+  static propTypes = {
+    textJSONWebSocket: PropTypes.object,
+    binaryPacketWebSocket: PropTypes.object,
+    dispatch: PropTypes.func.isRequired,
+    classes: PropTypes.object.isRequired
+  }
+
+  render () {
+    const { textJSONWebSocket, binaryPacketWebSocket, dispatch, classes } = this.props
+    return <GridContainer>
+      <Grid item xs={12} lg={6}>
+        <WebSocketTextJSON {...{ textJSONWebSocket, dispatch, classes }} />
+      </Grid>
+      <Grid item xs={12} lg={6}>
+        <WebSocketBinaryPacket {...{ binaryPacketWebSocket, dispatch, classes }} />
+      </Grid>
+    </GridContainer>
+  }
+}
+
+const WebSocket = withStyles((theme) => ({ log: LogStyle }))(WebSocketComponent)
+
+export { WebSocket }

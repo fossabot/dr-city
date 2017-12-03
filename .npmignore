@@ -2,8 +2,6 @@
 **/*-gitignore/**
 /.*
 /*.tgz
-/library/*.map
-/config
+/*.lock
 /source
-/example
-/pack
+/pack-source

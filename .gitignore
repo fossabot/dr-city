@@ -11,4 +11,4 @@ node_modules
 **/*-gitignore/**
 /*.tgz
 /library
-/example
+/resource/pack

@@ -1,76 +1,63 @@
-import { Common } from 'dr-js/module/Dr.node'
+import { Common, Node } from 'dr-js/module/Dr.node'
+
 const { createOptionParser, OPTION_CONFIG_PRESET } = Common.Module
+const { parseOptionMap, getOptionOptional, getSingleOptionOptional, getOption, getSingleOption } = Node.Module
 
-const checkModeServerOption = (optionMap, optionFormatSet, format) => optionMap[ 'mode' ].argumentList[ 0 ] !== 'server'
-const checkTypeHttpsOption = (optionMap, optionFormatSet, format) => optionMap[ 'protocol' ].argumentList[ 0 ] !== 'https:'
-
-const CommonSingleStringPathFormat = { ...OPTION_CONFIG_PRESET.SingleString, isPath: true }
-const CommonHttpsOptionFormat = { optional: checkTypeHttpsOption, ...CommonSingleStringPathFormat }
+const SingleStringPathFormat = { ...OPTION_CONFIG_PRESET.SingleString, isPath: true }
+const HttpsOptionFormat = { optional: (optionMap) => optionMap[ 'protocol' ].argumentList[ 0 ] !== 'https:', ...SingleStringPathFormat }
 
 const OPTION_CONFIG = {
   prefixENV: 'dr-city',
   formatList: [
     {
+      ...OPTION_CONFIG_PRESET.SingleString,
       name: 'config',
       shortName: 'c',
       optional: true,
-      description: `# from JSON: set to path relative process.cwd()\n# from ENV: set to 'env' to collect from process.env`,
-      ...OPTION_CONFIG_PRESET.SingleString
+      description: `# from JSON: set to 'path/to/config.json'\n# from ENV: set to 'env'`
     },
+    { ...OPTION_CONFIG_PRESET.SingleString, name: 'hostname', shortName: 'h' },
+    { ...OPTION_CONFIG_PRESET.SingleInteger, name: 'port', shortName: 'p' },
     {
-      name: 'mode',
-      shortName: 'm',
-      description: `should be 'server' or 'certbot'`,
-      ...OPTION_CONFIG_PRESET.OneOfString([ 'server', 'certbot' ]),
+      ...OPTION_CONFIG_PRESET.OneOfString([ 'https:', 'http:' ]),
+      name: 'protocol',
+      shortName: 't',
       extendFormatList: [
-        { name: 'hostname', shortName: 'h', ...OPTION_CONFIG_PRESET.SingleString },
-        { name: 'port', shortName: 'p', ...OPTION_CONFIG_PRESET.SingleInteger },
-        {
-          name: 'protocol',
-          shortName: 't',
-          description: `protocol type, 'https:' or 'http:'`,
-          ...OPTION_CONFIG_PRESET.OneOfString([ 'https:', 'http:' ]),
-          extendFormatList: [
-            { name: 'file-SSL-key', ...CommonHttpsOptionFormat },
-            { name: 'file-SSL-cert', ...CommonHttpsOptionFormat },
-            { name: 'file-SSL-chain', ...CommonHttpsOptionFormat },
-            { name: 'file-SSL-dhparam', ...CommonHttpsOptionFormat }
-          ]
-        },
-        { name: 'path-resource', ...CommonSingleStringPathFormat },
-        { name: 'path-share', optional: checkModeServerOption, ...CommonSingleStringPathFormat },
-        { name: 'path-user', optional: checkModeServerOption, ...CommonSingleStringPathFormat },
-        {
-          name: 'path-log',
-          optional: true,
-          ...CommonSingleStringPathFormat,
-          extendFormatList: [ { name: 'prefix-log-file', optional: true, ...OPTION_CONFIG_PRESET.SingleString } ]
-        },
-        { name: 'file-pid', optional: true, ...CommonSingleStringPathFormat },
-        { name: 'file-firebase-admin-token', optional: checkModeServerOption, ...CommonSingleStringPathFormat }
+        { ...HttpsOptionFormat, name: 'file-SSL-key' },
+        { ...HttpsOptionFormat, name: 'file-SSL-cert' },
+        { ...HttpsOptionFormat, name: 'file-SSL-chain' },
+        { ...HttpsOptionFormat, name: 'file-SSL-dhparam' }
       ]
-    }
+    },
+    { ...SingleStringPathFormat, name: 'path-share' },
+    { ...SingleStringPathFormat, name: 'path-user' },
+    {
+      ...SingleStringPathFormat,
+      name: 'path-log',
+      optional: true,
+      extendFormatList: [
+        { ...OPTION_CONFIG_PRESET.SingleString, name: 'prefix-log-file', optional: true }
+      ]
+    },
+    { ...SingleStringPathFormat, name: 'file-pid', optional: true },
+    { ...SingleStringPathFormat, name: 'file-firebase-admin-token' }
   ]
 }
 
-const {
-  parseCLI,
-  parseENV,
-  parseJSON,
-  processOptionMap,
-  formatUsage
-} = createOptionParser(OPTION_CONFIG)
+const { parseCLI, parseENV, parseJSON, processOptionMap, formatUsage } = createOptionParser(OPTION_CONFIG)
+
+const parseOption = async () => ({
+  optionMap: await parseOptionMap({ parseCLI, parseENV, parseJSON, processOptionMap }),
+  getOption,
+  getOptionOptional,
+  getSingleOption,
+  getSingleOptionOptional
+})
 
 const exitWithError = (error) => {
   __DEV__ && console.warn(error)
-  console.warn(formatUsage(error.message || error.toString()))
+  !__DEV__ && console.warn(formatUsage(error.message || error.toString()))
   process.exit(1)
 }
 
-export {
-  parseCLI,
-  parseENV,
-  parseJSON,
-  processOptionMap,
-  exitWithError
-}
+export { parseOption, exitWithError }
