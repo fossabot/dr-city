@@ -54,7 +54,7 @@ module.exports = {
       new BabelMinifyPlugin(),
       new BannerPlugin({ banner: '/* eslint-disable */', raw: true, test: /\.js$/, entryOnly: false }),
       new BannerPlugin({ banner: '/* stylelint-disable */', raw: true, test: /\.css$/, entryOnly: false }),
-      new CompressionPlugin({ test: /\.(js|css)$/, minRatio: 1, deleteOriginalAssets: IS_PRODUCTION })
+      new CompressionPlugin({ test: /\.(js|css)$/, minRatio: 1, deleteOriginalAssets: true })
     ] : [])
   ]
 }

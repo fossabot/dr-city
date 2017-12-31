@@ -16,7 +16,7 @@ const DLL_NAME_MAP = {
 const PATH_RESOURCE = nodeModulePath.resolve(__dirname, 'resource')
 const PATH_RESOURCE_PACK = nodeModulePath.resolve(__dirname, 'resource/pack')
 const PATH_RESOURCE_PACK_MANIFEST = nodeModulePath.resolve(__dirname, 'resource/pack/manifest')
-const PATH_RESOURCE_PACK_DLL_MANIFEST = nodeModulePath.resolve(__dirname, 'resource/pack/dll-manifest')
+const PATH_RESOURCE_PACK_DLL_MANIFEST = nodeModulePath.resolve(__dirname, 'resource/pack/dll-manifest-gitignore')
 const GET_PACK_MANIFEST_MAP = async () => ({
   ...JSON.parse(await readFileAsync(nodeModulePath.join(PATH_RESOURCE_PACK_MANIFEST, 'main.json'))),
   ...JSON.parse(await readFileAsync(nodeModulePath.join(PATH_RESOURCE_PACK_MANIFEST, 'dll-vendor.json'))),

@@ -13,7 +13,7 @@ const getDllConfig = (dllName, dllEntryChunks, isMinify) => {
   const libraryName = `__${dllName.replace(/[^\w]/g, '_').toUpperCase()}__`
   return {
     bail: IS_PRODUCTION, // Don't attempt to continue if there are any errors.
-    // devtool: IS_PRODUCTION ? 'source-map' : false, // TODO: Wait for: https://github.com/webpack/webpack-sources/issues/28
+    devtool: false, // IS_PRODUCTION ? 'source-map' : false, // TODO: Wait for: https://github.com/webpack/webpack-sources/issues/28
     entry: { [ dllName ]: dllEntryChunks },
     output: {
       path: PATH_RESOURCE_PACK,
@@ -32,7 +32,7 @@ const getDllConfig = (dllName, dllEntryChunks, isMinify) => {
         new ModuleConcatenationPlugin(),
         ...(isMinify ? [ new BabelMinifyPlugin() ] : []), // TODO: minification error: https://github.com/firebase/firebase-js-sdk/issues/154
         new BannerPlugin({ banner: '/* eslint-disable */', raw: true, test: /\.js$/, entryOnly: false }),
-        new CompressionPlugin({ test: /\.js$/, minRatio: 1 })
+        new CompressionPlugin({ test: /\.js$/, minRatio: 1, deleteOriginalAssets: true })
       ] : [])
     ]
   }
