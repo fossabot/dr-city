@@ -108,7 +108,7 @@ const configureServer = async ({
 
   start()
 
-  logger.add(`${clock()} [SERVER UP] server option: ${JSON.stringify(option)}`)
+  logger.add(`${new Date().toISOString()} [SERVER UP] ${option.baseUrl}`)
 
   return { server, start, stop, option }
 }

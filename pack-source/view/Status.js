@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react'
 import PropTypes from 'prop-types'
-import { Card, CardHeader, Grid, withStyles } from 'material-ui'
+import { Card, CardHeader, Grid, Divider, withStyles } from 'material-ui'
 import { ROUTE_MAP } from 'pack-source/__utils__'
 import { LogStyle } from 'pack-source/theme/style'
 import { GridContainer } from 'pack-source/view/Layout'
@@ -36,6 +36,7 @@ class StatusComponent extends PureComponent {
     const { code, signal, stdoutString, stderrString } = status
     return <Grid key={index} item xs={12} sm={8}><Card>
       <CardHeader title={config.name} subheader={config.command} />
+      <Divider />
       {code !== 0 && <Grid component="pre" className={classes.log}>[{code}] {signal || ''}</Grid>}
       {stdoutString && <Grid component="pre" className={classes.log}>{stdoutString}</Grid>}
       {stderrString && <Grid component="pre" className={classes.log}>{stderrString}</Grid>}

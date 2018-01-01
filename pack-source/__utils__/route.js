@@ -2,7 +2,7 @@ import { ROUTE_MAP } from 'config.pack'
 
 const ROUTE_INFO_MAP = {
   [ ROUTE_MAP.VIEW_MAIN ]: { title: 'Home', iconName: 'home' },
-  [ ROUTE_MAP.VIEW_STATUS ]: { title: 'Status', iconName: 'assignment' },
+  [ ROUTE_MAP.VIEW_STATUS ]: { title: 'Status', iconName: 'assessment' },
   [ ROUTE_MAP.VIEW_FILE ]: { title: 'File', iconName: 'folder' },
   [ ROUTE_MAP.VIEW_INFO ]: { title: 'Info', iconName: 'info' },
 

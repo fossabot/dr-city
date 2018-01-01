@@ -39,7 +39,7 @@ const renderItemDirectory = (linkUri, linkText, onClick) => <ListItem key={linkU
 </ListItem>
 
 const renderItemFile = (linkUri, linkText, onClick) => <ListItem key={linkUri} onClick={onClick} button>
-  <ListItemIcon><Icon>insert_drive_file</Icon></ListItemIcon>
+  <ListItemIcon><Icon>description</Icon></ListItemIcon>
   <ListItemText primary={<Typography noWrap>{linkText}</Typography>} />
 </ListItem>
 

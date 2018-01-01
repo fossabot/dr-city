@@ -1,7 +1,6 @@
 import nodeModuleFs from 'fs'
-import { Common, Node } from 'dr-js/module/Dr.node'
+import { Node } from 'dr-js/module/Dr.node'
 
-const { Time: { clock } } = Common
 const { System: { setProcessExitListener }, File: { createDirectory }, Module: { createLogger } } = Node
 
 const configureProcess = async ({ pathLog, logFilePrefix, filePid }) => {
@@ -12,11 +11,11 @@ const configureProcess = async ({ pathLog, logFilePrefix, filePid }) => {
   setProcessExitListener({
     listenerAsync: async ({ eventType, ...exitState }) => {
       __DEV__ && console.log('listenerAsync', eventType, exitState)
-      logger.add(`${clock()} [SERVER DOWN] eventType: ${eventType}, exitState: ${JSON.stringify(exitState)}`)
+      logger.add(`${new Date().toISOString()} [SERVER DOWN] eventType: ${eventType}, exitState: ${JSON.stringify(exitState)}`)
     },
     listenerSync: ({ eventType, code }) => {
       __DEV__ && console.log('listenerSync', eventType, code)
-      logger.add(`${clock()} [SERVER EXIT] eventType: ${eventType}, code: ${code}`)
+      logger.add(`${new Date().toISOString()} [SERVER EXIT] eventType: ${eventType}, code: ${code}`)
       logger.end()
       try { filePid && nodeModuleFs.unlinkSync(filePid) } catch (error) { __DEV__ && console.log('remove pid file', error) }
     }
@@ -34,10 +33,16 @@ const configureLogger = async ({
   queueLengthThreshold = DEFAULT_LOG_LENGTH_THRESHOLD,
   fileSplitInterval = FILE_SPLIT_INTERVAL
 }) => {
-  __DEV__ && !pathLogDirectory && console.log('[Logger] output to console.log')
+  __DEV__ && !pathLogDirectory && console.log('[Logger] output with console.log()')
   if (!pathLogDirectory) return { add: console.log, save: EMPTY_FUNC, split: EMPTY_FUNC, end: EMPTY_FUNC }
   await createDirectory(pathLogDirectory)
-  return createLogger({ pathLogDirectory, prefixLogFile, queueLengthThreshold, fileSplitInterval })
+  return createLogger({
+    pathLogDirectory,
+    queueLengthThreshold,
+    fileSplitInterval,
+    getLogFileName: () => `${prefixLogFile}${(new Date().toISOString()).replace(/\W/g, '-')}.log`,
+    flags: 'a' // append if name clash
+  })
 }
 
 export { configureProcess }
