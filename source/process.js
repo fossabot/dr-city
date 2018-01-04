@@ -4,18 +4,18 @@ import { Node } from 'dr-js/module/Dr.node'
 const { System: { setProcessExitListener }, File: { createDirectory }, Module: { createLogger } } = Node
 
 const configureProcess = async ({ pathLog, logFilePrefix, filePid }) => {
-  const logger = await configureLogger({ pathLogDirectory: pathLog, prefixLogFile: logFilePrefix })
+  const logger = prefixLoggerTime(await configureLogger({ pathLogDirectory: pathLog, prefixLogFile: logFilePrefix }))
 
   filePid && nodeModuleFs.writeFileSync(filePid, `${process.pid}`)
 
   setProcessExitListener({
     listenerAsync: async ({ eventType, ...exitState }) => {
       __DEV__ && console.log('listenerAsync', eventType, exitState)
-      logger.add(`${new Date().toISOString()} [SERVER DOWN] eventType: ${eventType}, exitState: ${JSON.stringify(exitState)}`)
+      logger.add(`[SERVER DOWN] eventType: ${eventType}, exitState: ${JSON.stringify(exitState)}`)
     },
     listenerSync: ({ eventType, code }) => {
       __DEV__ && console.log('listenerSync', eventType, code)
-      logger.add(`${new Date().toISOString()} [SERVER EXIT] eventType: ${eventType}, code: ${code}`)
+      logger.add(`[SERVER EXIT] eventType: ${eventType}, code: ${code}`)
       logger.end()
       try { filePid && nodeModuleFs.unlinkSync(filePid) } catch (error) { __DEV__ && console.log('remove pid file', error) }
     }
@@ -43,6 +43,11 @@ const configureLogger = async ({
     getLogFileName: () => `${prefixLogFile}${(new Date().toISOString()).replace(/\W/g, '-')}.log`,
     flags: 'a' // append if name clash
   })
+}
+
+const prefixLoggerTime = (logger) => {
+  const { add } = logger
+  return { ...logger, add: (...args) => add(new Date().toISOString(), ...args) }
 }
 
 export { configureProcess }

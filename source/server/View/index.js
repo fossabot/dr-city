@@ -18,6 +18,7 @@ const createResponderRenderView = ({ getResourcePack, getResource, getShare, get
   viewMap.set(ROUTE_MAP.VIEW_STATUS, renderMain)
   viewMap.set(ROUTE_MAP.VIEW_INFO, renderMain)
   viewMap.set(ROUTE_MAP.VIEW_TEST_WEBSOCKET, renderMain)
+  viewMap.set(ROUTE_MAP.AUTH_VIEW_WEBSOCKET, renderMain)
   viewMap.set(ROUTE_MAP.AUTH_VIEW_USER_FILE, renderMain)
 
   const data = { route, viewKeyList: Array.from(viewMap.keys()), getResourcePack, getResource, getShare, getUser }

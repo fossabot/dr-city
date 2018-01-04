@@ -6,7 +6,7 @@ import { ErrorSnackbar } from './ErrorSnackbar'
 import { Auth } from './Auth'
 import { ShareFile, UserFile } from './File'
 import { Status } from './Status'
-import { WebSocket } from './WebSocket'
+import { WebSocket, AuthWebSocket } from './WebSocket'
 
 // direct
 import { Main } from './Main'
@@ -18,7 +18,13 @@ const AuthConnected = connect(({ auth: { user } }) => ({ user }))(Auth)
 const ShareFileConnected = connect()(ShareFile)
 const UserFileConnected = connect()(UserFile)
 const StatusConnected = connect()(Status)
-const WebSocketConnected = connect(({ websocket: { textJSONWebSocket, binaryPacketWebSocket } }) => ({ textJSONWebSocket, binaryPacketWebSocket }))(WebSocket)
+const WebSocketConnected = connect(({
+  websocket: { textJSONWebSocket, binaryPacketWebSocket }
+}) => ({ textJSONWebSocket, binaryPacketWebSocket }))(WebSocket)
+const AuthWebSocketConnected = connect(({
+  auth: { user },
+  websocket: { authGroupTextJSONWebSocket, authGroupBinaryPacketWebSocket }
+}) => ({ user, authGroupTextJSONWebSocket, authGroupBinaryPacketWebSocket }))(AuthWebSocket)
 
 export {
   Layout,
@@ -29,6 +35,7 @@ export {
   ShareFileConnected,
   UserFileConnected,
   WebSocketConnected,
+  AuthWebSocketConnected,
 
   Main,
   Info,

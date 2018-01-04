@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react'
 import PropTypes from 'prop-types'
 import { Card, CardContent, CardActions, Grid, Button, TextField, Typography } from 'material-ui'
-import { addLogListener, formatDataSize } from './__utils__'
+import { addLogListener, truncate, formatDataSize } from './__utils__'
 
 class WebSocketTextJSON extends PureComponent {
   static propTypes = {
@@ -22,7 +22,7 @@ class WebSocketTextJSON extends PureComponent {
       if (!textJSONWebSocket) return
       const data = JSON.stringify({ type: this.textJSONTypeRef.value, payload: this.textJSONPayloadRef.value })
       textJSONWebSocket.send(data)
-      this.addLog(`[>>|${formatDataSize(data)}] ${data.length > 48 ? `${data.slice(0, 32)}...` : data}`)
+      this.addLog(`[?|${formatDataSize(data)}] ${truncate(data)}`)
     }
 
     this.setTextJSONTypeRef = (ref) => (this.textJSONTypeRef = ref)

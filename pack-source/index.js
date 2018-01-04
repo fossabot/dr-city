@@ -13,6 +13,7 @@ import {
   ShareFileConnected,
   UserFileConnected,
   WebSocketConnected,
+  AuthWebSocketConnected,
 
   Main,
   Info,
@@ -36,9 +37,12 @@ window.main = (rootElement) => {
       { viewKey: ROUTE_MAP.VIEW_FILE, render: (routeData) => <ShareFileConnected relativePath={getRouteParamAny(routeData) || ''} /> }
     ],
     [ ROUTE_MAP.VIEW_INFO, { viewKey: ROUTE_MAP.VIEW_INFO, component: <Info /> } ],
+
     [ ROUTE_MAP.VIEW_TEST_WEBSOCKET, { viewKey: ROUTE_MAP.VIEW_TEST_WEBSOCKET, component: <WebSocketConnected /> } ],
     [ ROUTE_MAP.VIEW_TEST_ERROR, { viewKey: ROUTE_MAP.VIEW_TEST_ERROR, component: <TestError /> } ],
     [ ROUTE_MAP.VIEW_TEST_ERROR_ASYNC, { viewKey: ROUTE_MAP.VIEW_TEST_ERROR_ASYNC, component: <TestErrorAsync /> } ],
+
+    [ ROUTE_MAP.AUTH_VIEW_WEBSOCKET, { viewKey: ROUTE_MAP.AUTH_VIEW_WEBSOCKET, component: <AuthWebSocketConnected /> } ],
     [
       [ ROUTE_MAP.AUTH_VIEW_USER_FILE, `${ROUTE_MAP.AUTH_VIEW_USER_FILE}/`, `${ROUTE_MAP.AUTH_VIEW_USER_FILE}/*` ],
       { viewKey: ROUTE_MAP.AUTH_VIEW_USER_FILE, render: (routeData) => <UserFileConnected relativePath={getRouteParamAny(routeData) || ''} /> }

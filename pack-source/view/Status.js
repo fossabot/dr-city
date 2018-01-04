@@ -18,16 +18,22 @@ class StatusComponent extends PureComponent {
       try {
         const response = await window.fetch(ROUTE_MAP.TASK_SERVER_STATUS, { method: 'POST' })
         const { serverStatusList } = await response.json()
-        this.setState({ serverStatusList })
+        this.isMount && this.setState({ serverStatusList })
       } catch (error) {
         this.props.dispatch({ type: 'state:error:add', payload: { error, retryFunc: this.doFetchData } })
       }
     }
 
     this.state = { serverStatusList: [] }
+    this.isMount = false
   }
 
-  componentDidMount () { this.doFetchData() }
+  componentDidMount () {
+    this.isMount = true
+    this.doFetchData()
+  }
+
+  componentWillUnmount () { this.isMount = false }
 
   renderStatusCard ({ config, status }, index) {
     const { classes } = this.props

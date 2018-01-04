@@ -1,6 +1,6 @@
 {
   "name": "dr-city",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "author": "dr-js",
   "license": "MIT",
   "description": "Server of Dr.city",
@@ -28,8 +28,6 @@
     "build-pack-dev": "cross-env NODE_ENV=development webpack --config .webpackrc.pack.js --watch",
     "build-pack-dll": "cross-env NODE_ENV=production webpack --config .webpackrc.pack-dll.js",
     "build-pack-dll-dev": "cross-env NODE_ENV=development webpack --config .webpackrc.pack-dll.js --watch",
-    "perf-webpack-stats-pack": "cross-env NODE_ENV=production webpack --config .webpackrc.pack.js --json > pack-stats-gitignore.json",
-    "perf-webpack-stats-pack-dll": "cross-env NODE_ENV=production webpack --config .webpackrc.pack-dll.js --json > pack-dll-stats-gitignore.json",
     "prepack": "npm run build",
     "publish-dev": "npm publish --tag dev"
   },
@@ -38,13 +36,13 @@
     "npm": ">=5.5.0"
   },
   "dependencies": {
-    "dr-js": "^0.9.2",
-    "firebase-admin": "^5.6.0"
+    "dr-js": "^0.10.1-dev.0",
+    "firebase-admin": "^5.7.0"
   },
   "devDependencies": {
     "dev-dep-web-react": "^0.0.11",
     "firebase": "^4.8.1",
-    "material-ui": "^1.0.0-beta.26",
+    "material-ui": "^1.0.0-beta.27",
     "prop-types": "^15.6.0",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",

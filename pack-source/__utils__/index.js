@@ -2,7 +2,7 @@ export { ROUTE_MAP, ROUTE_INFO_MAP } from './route'
 
 // Simple store for state, with a handy function to wrapEntry
 const createStateStore = (state) => {
-  if (state === undefined) throw new Error('[ReduxEntry][createStateStore] initialState expected')
+  if (state === undefined) throw new Error('[createStateStore] initialState expected')
   return {
     getState: () => state,
     setState: (nextState) => (state = nextState),

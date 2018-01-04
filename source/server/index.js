@@ -60,7 +60,7 @@ const configureServer = async ({
     const { url, method, headers, socket: { remoteAddress, remotePort } } = store.request
     const host = headers[ 'host' ] || ''
     const userAgent = headers[ 'user-agent' ] || ''
-    logger.add(`${store.getState().time} [REQUEST] ${method} ${host}${url} ${remoteAddress}:${remotePort} ${userAgent}`)
+    logger.add(`[REQUEST] ${method} ${host}${url} ${remoteAddress}:${remotePort} ${userAgent}`)
   }
   const responderLogEnd = (store) => {
     const state = store.getState()
@@ -68,7 +68,7 @@ const configureServer = async ({
     const errorLog = state.error
       ? `[ERROR] ${store.request.method} ${store.request.url} ${store.response.finished ? 'finished' : 'not-finished'} ${state.error}`
       : ''
-    logger.add(`${state.time} [END] ${Format.time(clock() - state.time)} ${store.response.statusCode} ${errorLog}`)
+    logger.add(`[END] ${Format.time(clock() - state.time)} ${store.response.statusCode} ${errorLog}`)
   }
 
   // create server
@@ -108,7 +108,7 @@ const configureServer = async ({
 
   start()
 
-  logger.add(`${new Date().toISOString()} [SERVER UP] ${option.baseUrl}`)
+  logger.add(`[SERVER UP] ${option.baseUrl}`)
 
   return { server, start, stop, option }
 }

@@ -2,17 +2,16 @@ import React, { PureComponent } from 'react'
 import PropTypes from 'prop-types'
 import {
   Card, CardHeader,
-  List, ListItem, ListItemIcon, ListItemText,
+  List, ListItem, ListItemIcon, ListItemText, ListItemSecondaryAction,
   IconButton, Icon, Typography, Divider
 } from 'material-ui'
 
-class FileList extends PureComponent {
+class FileListEditable extends PureComponent {
   static propTypes = {
     routePrefix: PropTypes.string.isRequired,
     relativePath: PropTypes.string.isRequired,
     directoryList: PropTypes.array.isRequired,
     fileList: PropTypes.array.isRequired,
-    // isEditable: PropTypes.bool,
     toDirectory: PropTypes.func.isRequired,
     toFile: PropTypes.func.isRequired
   }
@@ -40,11 +39,13 @@ class FileList extends PureComponent {
 const renderItemDirectory = (linkUri, linkText, onClick) => <ListItem key={linkUri} onClick={onClick} button>
   <ListItemIcon><Icon>folder_open</Icon></ListItemIcon>
   <ListItemText primary={<Typography noWrap>{linkText}</Typography>} />
+  <ListItemSecondaryAction><IconButton>more_vert</IconButton></ListItemSecondaryAction>
 </ListItem>
 
 const renderItemFile = (linkUri, linkText, onClick) => <ListItem key={linkUri} onClick={onClick} button>
   <ListItemIcon><Icon>description</Icon></ListItemIcon>
   <ListItemText primary={<Typography noWrap>{linkText}</Typography>} />
+  <ListItemSecondaryAction><IconButton>more_vert</IconButton></ListItemSecondaryAction>
 </ListItem>
 
-export { FileList }
+export { FileListEditable }

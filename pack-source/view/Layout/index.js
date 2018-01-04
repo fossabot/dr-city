@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import {
   AppBar, Toolbar, Drawer, Menu, Divider, Grid, List,
   IconButton, Icon, Typography,
-  MuiThemeProvider, withStyles
+  Hidden, MuiThemeProvider, withStyles
 } from 'material-ui'
 
 import { metrics } from 'pack-source/theme/metrics'
@@ -35,6 +35,14 @@ class LayoutComponent extends PureComponent {
       routePropsMap
     }
 
+    this.drawerPropsLocked = {
+      doDrawerOpen: () => {},
+      doDrawerClose: () => {},
+      isDrawerLocked: true,
+      isDrawerOpen: true,
+      routePropsMap
+    }
+
     this.menuProps = {
       doMenuOpen: (event) => this.setState({ menuElement: event.currentTarget }),
       doMenuClose: () => this.setState({ menuElement: null }),
@@ -55,10 +63,12 @@ class LayoutComponent extends PureComponent {
     const { title } = ROUTE_INFO_MAP[ route ]
     return <MuiThemeProvider theme={MuiTheme}>
       <div className={classes.fill}>
-        <AppBar><Toolbar>
-          <IconButton className={classes.menuButton} onClick={this.drawerProps.doDrawerOpen}>
-            <Icon>menu</Icon>
-          </IconButton>
+        <AppBar className={classes.hiddenBreakpoint}><Toolbar>
+          <Hidden mdUp implementation="css">
+            <IconButton className={classes.menuButton} onClick={this.drawerProps.doDrawerOpen}>
+              <Icon>menu</Icon>
+            </IconButton>
+          </Hidden>
 
           <Typography className={classes.title} type="title" color="inherit" noWrap>{title}</Typography>
 
@@ -66,10 +76,9 @@ class LayoutComponent extends PureComponent {
           {user && <MenuComponent {...{ ...this.menuProps, menuElement, route, user }} />}
         </Toolbar></AppBar>
         <AppBarPlaceholder />
-
-        {children}
-
-        <DrawerComponent {...{ ...this.drawerProps, isDrawerOpen, route }} />
+        <div className={classes.hiddenBreakpoint}>{children}</div>
+        <Hidden mdUp implementation="css"><DrawerComponent {...{ ...this.drawerProps, isDrawerOpen, route }} /></Hidden>
+        <Hidden smDown implementation="css"><DrawerComponent {...{ ...this.drawerPropsLocked, route }} /></Hidden>
       </div>
     </MuiThemeProvider>
   }
@@ -77,6 +86,12 @@ class LayoutComponent extends PureComponent {
 
 const Layout = withStyles((theme) => ({
   fill: { width: '100%', overflow: 'hidden' },
+  hiddenBreakpoint: {
+    [ theme.breakpoints.up('md') ]: {
+      marginLeft: metrics.lengthDrawer,
+      width: `calc(100% - ${metrics.lengthDrawer})`
+    }
+  },
   menuButton: { marginRight: metrics.lengthS },
   title: { flex: 1 }
 }))(LayoutComponent)
@@ -91,6 +106,7 @@ const GridContainer = withStyles((theme) => ({
 
 class DrawerComponent extends PureComponent {
   static propTypes = {
+    isDrawerLocked: PropTypes.bool,
     isDrawerOpen: PropTypes.bool,
     doDrawerClose: PropTypes.func,
     routePropsMap: PropTypes.object,
@@ -98,8 +114,8 @@ class DrawerComponent extends PureComponent {
   }
 
   render () {
-    const { isDrawerOpen, doDrawerClose, routePropsMap, route } = this.props
-    return <Drawer open={isDrawerOpen} onClose={doDrawerClose} onClick={doDrawerClose}>
+    const { isDrawerLocked, isDrawerOpen, doDrawerClose, routePropsMap, route } = this.props
+    return <Drawer type={isDrawerLocked ? 'permanent' : 'temporary'} open={isDrawerOpen} onClose={doDrawerClose} onClick={doDrawerClose}>
       {isDrawerOpen && <DrawerContainer>
         <AppBarPlaceholder />
         <Divider />
@@ -137,6 +153,7 @@ class MenuComponent extends PureComponent {
     const isMenuOpen = Boolean(menuElement)
     return <Menu open={isMenuOpen} anchorEl={menuElement} onClose={doMenuClose} onClick={doMenuClose}>
       <DrawerItemAuth {...routePropsMap[ ROUTE_MAP.VIEW_USER ]} isSelect={route === ROUTE_MAP.VIEW_USER} user={user} />
+      <DrawerItem {...routePropsMap[ ROUTE_MAP.AUTH_VIEW_WEBSOCKET ]} isSelect={route === ROUTE_MAP.AUTH_VIEW_WEBSOCKET} />
       <DrawerItem {...routePropsMap[ ROUTE_MAP.AUTH_VIEW_USER_FILE ]} isSelect={route === ROUTE_MAP.AUTH_VIEW_USER_FILE} />
     </Menu>
   }

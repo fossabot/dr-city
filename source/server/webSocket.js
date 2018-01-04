@@ -18,74 +18,120 @@ const AUTH_FRAME_LENGTH_LIMIT = 32 * 1024 * 1024 // 32 MiB
 const REGEXP_AUTH_TOKEN = /auth-token!(.+)/
 
 // common protocol
-const enableProtocolTextJSON = (webSocket, onData) => webSocket.on(WEB_SOCKET_EVENT_MAP.FRAME, async (webSocket, { dataType, dataBuffer }) => {
+const enableProtocolTextJSON = (webSocket, onData) => webSocket.on(WEB_SOCKET_EVENT_MAP.FRAME, async (_, { dataType, dataBuffer }) => {
   __DEV__ && console.log(`>> FRAME:`, dataType, dataBuffer.length, dataBuffer.toString().slice(0, 20))
   if (dataType !== DATA_TYPE_MAP.OPCODE_TEXT) return webSocket.close(1000, 'OPCODE_TEXT opcode expected')
-  try { await onData(webSocket, JSON.parse(dataBuffer.toString())) } catch (error) {
+  try { await onData(JSON.parse(dataBuffer.toString())) } catch (error) {
     __DEV__ && console.warn('[ERROR][enableProtocolTextJSON]', error)
     webSocket.close(1000, error.toString())
   }
 })
-const enableProtocolBufferPacket = (webSocket, onData) => webSocket.on(WEB_SOCKET_EVENT_MAP.FRAME, async (webSocket, { dataType, dataBuffer }) => {
+const enableProtocolBufferPacket = (webSocket, onData) => webSocket.on(WEB_SOCKET_EVENT_MAP.FRAME, async (_, { dataType, dataBuffer }) => {
   __DEV__ && console.log(`>> FRAME:`, dataType, dataBuffer.length, dataBuffer.toString().slice(0, 20))
   if (dataType !== DATA_TYPE_MAP.OPCODE_BINARY) return webSocket.close(1000, 'OPCODE_BINARY opcode expected')
-  try { await onData(webSocket, parseBufferPacket(dataBuffer)) } catch (error) {
+  try { await onData(parseBufferPacket(dataBuffer)) } catch (error) {
     __DEV__ && console.warn('[ERROR][enableProtocolBufferPacket]', error)
     webSocket.close(1000, error.toString())
   }
 })
 
 const getUpgradeRequestProtocolMap = ({ pathUser }) => {
-  const authGroupSetMap = {}
+  const authGroupInfoListMap = {}
   const protocolMap = {
-    'echo-text-json': (store) => enableProtocolTextJSON(
-      store.webSocket,
-      (webSocket, { type, payload }) => type === 'close'
+    'echo-text-json': ({ webSocket }) => enableProtocolTextJSON(webSocket, ({ type, payload }) => (
+      type === 'close'
         ? webSocket.close(1000, 'CLOSE received')
         : webSocket.sendText(JSON.stringify({ type, payload }))
-    ),
-    'echo-binary-packet': (store) => enableProtocolBufferPacket(
-      store.webSocket,
-      (webSocket, [ headerString, payloadBuffer ]) => JSON.parse(headerString).type === 'close'
+    )),
+    'echo-binary-packet': ({ webSocket }) => enableProtocolBufferPacket(webSocket, ([ headerString, payloadBuffer ]) => (
+      JSON.parse(headerString).type === 'close'
         ? webSocket.close(1000, 'CLOSE received')
         : webSocket.sendBuffer(packBufferPacket(headerString, payloadBuffer))
-    )
+    ))
   }
   const authProtocolMap = {
     ...protocolMap,
     'group-text-json': (store) => {
-      const { groupPath } = store.getState()
-      store.webSocket.on(WEB_SOCKET_EVENT_MAP.OPEN, () => {
-        if (authGroupSetMap[ groupPath ] === undefined) authGroupSetMap[ groupPath ] = new Set()
-        store.groupSet = authGroupSetMap[ groupPath ]
-        store.groupSet.add(store.webSocket)
-        __DEV__ && console.log(`[responderUpdateRequestAuth] >> OPEN, current group: ${store.groupSet.size} (self included)`, groupPath)
+      const { webSocket } = store
+      const { groupPath, name, user: { id } } = store.getState()
+      let groupInfoList
+      const sendGroupUpdate = () => {
+        const text = JSON.stringify({ type: 'groupInfo', payload: groupInfoList.map(({ name, id }) => ({ name, id })) })
+        groupInfoList.forEach((v) => v.webSocket.sendText(text))
+      }
+      webSocket.on(WEB_SOCKET_EVENT_MAP.OPEN, () => {
+        if (authGroupInfoListMap[ groupPath ] === undefined) authGroupInfoListMap[ groupPath ] = []
+        groupInfoList = authGroupInfoListMap[ groupPath ]
+        groupInfoList.push({ name, id, webSocket })
+        sendGroupUpdate()
+        __DEV__ && console.log(`[responderUpdateRequestAuth] >> OPEN, current group: ${groupInfoList.length} (self included)`, groupPath)
       })
-      store.webSocket.on(WEB_SOCKET_EVENT_MAP.CLOSE, () => {
-        store.groupSet.delete(store.webSocket)
-        if (store.groupSet.size === 0) delete authGroupSetMap[ groupPath ]
-        __DEV__ && console.log(`[responderUpdateRequestAuth] >> CLOSE, current group: ${store.groupSet.size} (self included)`, groupPath)
+      webSocket.on(WEB_SOCKET_EVENT_MAP.CLOSE, () => {
+        const groupInfoIndex = groupInfoList.findIndex((v) => v.webSocket === webSocket)
+        groupInfoList.splice(groupInfoIndex, 1)
+        if (groupInfoList.length === 0) delete authGroupInfoListMap[ groupPath ]
+        sendGroupUpdate()
+        __DEV__ && console.log(`[responderUpdateRequestAuth] >> CLOSE, current group: ${groupInfoList.length} (self included)`, groupPath)
       })
-      enableProtocolTextJSON(store.webSocket, (webSocket, { type, payload }) => { // test for chat room
+      enableProtocolTextJSON(webSocket, ({ type, payload }) => { // test for chat room
         if (type === 'close') return webSocket.close(1000, 'CLOSE received')
-        const text = JSON.stringify({ type, payload })
-        store.groupSet.forEach((groupWebSocket) => groupWebSocket !== webSocket && groupWebSocket.sendText(text))
+        if (type === 'text') {
+          const text = JSON.stringify({ type, payload: { ...payload, name, id } })
+          groupInfoList.forEach((v) => v.webSocket !== webSocket && v.webSocket.sendText(text))
+        }
       })
     },
-    'upload-binary-packet': (store) => enableProtocolBufferPacket(store, async (store, [ headerString, payloadBuffer ]) => {
-      __DEV__ && console.log('[upload-binary-packet] get', headerString)
-      const { type, payload } = JSON.parse(headerString)
-      if (type === 'close') return store.webSocket.close(1000, 'CLOSE received')
-      __DEV__ && console.log('[upload-binary-packet]', { type, payload }, payloadBuffer.length)
-      await saveBufferToFile(`${pathUser}/${store.getState().user.id}/upload`, payload.fileName, payloadBuffer)
-    })
+    'group-binary-packet': (store) => {
+      const { webSocket } = store
+      const { groupPath, name, user: { id } } = store.getState()
+      let groupInfoList
+      const sendGroupUpdate = () => {
+        const buffer = packBufferPacket(JSON.stringify({ type: 'groupInfo', payload: groupInfoList.map(({ name, id }) => ({ name, id })) }))
+        groupInfoList.forEach((v) => v.webSocket.sendBuffer(buffer))
+      }
+      webSocket.on(WEB_SOCKET_EVENT_MAP.OPEN, () => {
+        if (authGroupInfoListMap[ groupPath ] === undefined) authGroupInfoListMap[ groupPath ] = []
+        groupInfoList = authGroupInfoListMap[ groupPath ]
+        groupInfoList.push({ name, id, webSocket })
+        sendGroupUpdate()
+        __DEV__ && console.log(`[responderUpdateRequestAuth] >> OPEN, current group: ${groupInfoList.length} (self included)`, groupPath)
+      })
+      webSocket.on(WEB_SOCKET_EVENT_MAP.CLOSE, () => {
+        const groupInfoIndex = groupInfoList.findIndex((v) => v.webSocket === webSocket)
+        groupInfoList.splice(groupInfoIndex, 1)
+        if (groupInfoList.length === 0) delete authGroupInfoListMap[ groupPath ]
+        sendGroupUpdate()
+        __DEV__ && console.log(`[responderUpdateRequestAuth] >> CLOSE, current group: ${groupInfoList.length} (self included)`, groupPath)
+      })
+      enableProtocolBufferPacket(webSocket, ([ headerString, payloadBuffer ]) => {
+        const { type, payload } = JSON.parse(headerString)
+        if (type === 'close') return webSocket.close(1000, 'CLOSE received')
+        if (type === 'buffer') {
+          const headerString = JSON.stringify({ type, payload: { ...payload, name, id } })
+          const buffer = packBufferPacket(headerString, payloadBuffer)
+          groupInfoList.forEach((v) => v.webSocket !== webSocket && v.webSocket.sendBuffer(buffer))
+        }
+      })
+    },
+    'upload-binary-packet': (store) => {
+      const { webSocket } = store
+      const { user: { id } } = store.getState()
+      enableProtocolBufferPacket(webSocket, async ([ headerString, payloadBuffer ]) => {
+        __DEV__ && console.log('[upload-binary-packet] get', headerString)
+        const { type, payload } = JSON.parse(headerString)
+        if (type === 'close') return webSocket.close(1000, 'CLOSE received')
+        __DEV__ && console.log('[upload-binary-packet]', { type, payload }, payloadBuffer.length)
+        await saveBufferToFile(`${pathUser}/${id}/upload`, payload.fileName, payloadBuffer)
+        __DEV__ && console.log('[upload-binary-packet] done', { type, payload }, payloadBuffer.length)
+      })
+    }
   }
   return {
-    authGroupSetMap,
     protocolMap,
     authProtocolMap,
     protocolTypeSet: new Set(Object.keys(protocolMap)),
-    authProtocolTypeSet: new Set(Object.keys(authProtocolMap))
+    authProtocolTypeSet: new Set(Object.keys(authProtocolMap)),
+    authGroupProtocolTypeSet: new Set([ 'group-text-json', 'group-binary-packet' ])
   }
 }
 
@@ -102,7 +148,7 @@ const getAuthToken = (protocolList) => {
 }
 
 const configureWebSocketServer = ({ server, option, firebaseAdminApp, pathUser }) => {
-  const { protocolMap, protocolTypeSet, authProtocolMap, authProtocolTypeSet } = getUpgradeRequestProtocolMap({ pathUser })
+  const { protocolMap, protocolTypeSet, authProtocolMap, authProtocolTypeSet, authGroupProtocolTypeSet } = getUpgradeRequestProtocolMap({ pathUser })
 
   const responderWebsocketUpgrade = async (store) => {
     const { origin, protocolList, isSecure } = store.webSocket
@@ -133,12 +179,17 @@ const configureWebSocketServer = ({ server, option, firebaseAdminApp, pathUser }
     __DEV__ && console.log('[responderWebsocketGroupAuthUpgrade]', { origin, protocolList, isSecure }, store.bodyHeadBuffer.length)
     const groupPath = getRouteParamAny(store) // TODO: should verify groupPath
     if (!groupPath) return
-    const protocol = protocolList.includes('group-text-json') && 'group-text-json'
+    const name = store.getState().url.searchParams.get('name') // TODO: should verify name
+    if (!name) return
+    __DEV__ && console.log('[responderWebsocketGroupAuthUpgrade] pass groupPath', groupPath)
+    const protocol = getProtocol(protocolList, authGroupProtocolTypeSet)
     if (!protocol) return
+    __DEV__ && console.log('[responderWebsocketGroupAuthUpgrade] pass protocol', protocol)
     const authToken = getAuthToken(protocolList)
     if (!authToken) return
+    __DEV__ && console.log('[responderWebsocketGroupAuthUpgrade] pass authToken', authToken)
     await responderAuthVerifyToken(store, firebaseAdminApp, authToken)
-    store.setState({ protocol, groupPath })
+    store.setState({ protocol, groupPath, name })
     store.webSocket.setFrameLengthLimit(AUTH_FRAME_LENGTH_LIMIT)
     authProtocolMap[ protocol ](store)
     __DEV__ && store.webSocket.on(WEB_SOCKET_EVENT_MAP.OPEN, () => console.log(`[responderWebsocketGroupAuthUpgrade] >> OPEN, ${protocol}, current active: ${webSocketSet.size} (self excluded)`))
@@ -152,7 +203,7 @@ const configureWebSocketServer = ({ server, option, firebaseAdminApp, pathUser }
         createResponderRouter(createRouteMap([
           [ '/websocket', 'GET', responderWebsocketUpgrade ],
           [ '/websocket-auth', 'GET', responderWebsocketAuthUpgrade ],
-          [ '/websocket-group-auth/*', 'GET', responderWebsocketGroupAuthUpgrade ]
+          [ '/websocket-auth/group/*', 'GET', responderWebsocketGroupAuthUpgrade ]
         ]))
       ]
     }),

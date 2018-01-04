@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react'
 import PropTypes from 'prop-types'
 import { Card, CardContent, CardActions, Grid, Button, TextField, Typography } from 'material-ui'
-import { addLogListener, formatDataSize, createBufferPacket } from './__utils__'
+import { addLogListener, truncate, formatDataSize, createBufferPacket } from './__utils__'
 
 class WebSocketBinaryPacket extends PureComponent {
   static propTypes = {
@@ -15,16 +15,6 @@ class WebSocketBinaryPacket extends PureComponent {
 
     this.clearLog = () => this.setState({ logText: '' })
     this.addLog = (logText) => this.setState({ logText: `${this.state.logText}${logText}\n` })
-
-    this.onInputFileChange = () => {
-      const blobFileName = this.binaryPacketBlobRef.files[ 0 ] ? this.binaryPacketBlobRef.files[ 0 ].name : ''
-      this.setState({ blobFileName })
-    }
-    this.clearInputFile = () => {
-      this.binaryPacketBlobRef.value = ''
-      this.setState({ blobFileName: '' })
-    }
-
     this.openWebSocket = () => this.props.dispatch({ type: 'state:websocket:binary-packet:open' })
     this.closeWebSocket = () => this.props.dispatch({ type: 'state:websocket:binary-packet:close' })
     this.sendWebSocket = () => {
@@ -36,7 +26,16 @@ class WebSocketBinaryPacket extends PureComponent {
         this.binaryPacketBlobRef.files[ 0 ]
       )
       binaryPacketWebSocket.send(data)
-      this.addLog(`[>>|${formatDataSize(data)}] header: ${headerString.length > 48 ? `${headerString.slice(0, 32)}...` : headerString}, payload: ${formatDataSize(payloadBlob)}`)
+      this.addLog(`[?|${formatDataSize(data)}] header: ${truncate(headerString)}, payload: ${formatDataSize(payloadBlob)}`)
+    }
+
+    this.onInputFileChange = () => {
+      const blobFileName = this.binaryPacketBlobRef.files[ 0 ] ? this.binaryPacketBlobRef.files[ 0 ].name : ''
+      this.setState({ blobFileName })
+    }
+    this.clearInputFile = () => {
+      this.binaryPacketBlobRef.value = ''
+      this.setState({ blobFileName: '' })
     }
 
     this.setBufferPacketTypeRef = (ref) => (this.binaryPacketTypeRef = ref)

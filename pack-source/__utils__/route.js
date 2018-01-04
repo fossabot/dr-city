@@ -7,6 +7,7 @@ const ROUTE_INFO_MAP = {
   [ ROUTE_MAP.VIEW_INFO ]: { title: 'Info', iconName: 'info' },
 
   [ ROUTE_MAP.VIEW_USER ]: { title: 'User', iconName: 'account_box' },
+  [ ROUTE_MAP.AUTH_VIEW_WEBSOCKET ]: { title: 'User WebSocket', iconName: 'compare_arrows' },
   [ ROUTE_MAP.AUTH_VIEW_USER_FILE ]: { title: 'User File', iconName: 'folder' },
 
   [ ROUTE_MAP.VIEW_TEST_WEBSOCKET ]: { title: 'Test WebSocket', iconName: 'extension' },

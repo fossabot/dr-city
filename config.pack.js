@@ -18,6 +18,7 @@ const ROUTE_MAP = {
   VIEW_TEST_ERROR_ASYNC: '/v/test-error-async',
 
   AUTH_VIEW: '/~v',
+  AUTH_VIEW_WEBSOCKET: '/~v/websocket',
   AUTH_VIEW_USER_FILE: '/~v/file',
 
   // task

@@ -52,6 +52,8 @@ const getAuthToken = async () => {
 
 const authFetch = async (uri, options = {}) => window.fetch(uri, { ...options, headers: { ...options.headers, 'auth-token': await getAuthToken() } })
 
+const createAuthWebSocket = async (url, protocol) => new window.WebSocket(url, [ protocol, `auth-token!${await getAuthToken()}` ])
+
 const entryMap = {
   'state:auth:init': wrapEntry((state, store) => {
     const firebaseApp = firebase.initializeApp({ apiKey: FIREBASE_API_KEY, authDomain: FIREBASE_AUTH_DOMAIN })
@@ -92,7 +94,7 @@ const alertLogError = (error) => {
   window.alert(error.message)
 }
 
-export { authFetch }
+export { authFetch, createAuthWebSocket }
 export default {
   asyncTaskMap,
   entryMap,

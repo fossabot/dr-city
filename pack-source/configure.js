@@ -1,14 +1,14 @@
 import { Common } from 'dr-js/module/Dr.browser'
 import { entryMap as stateEntryMap, reducerMap as stateReducerMap, setInitialState } from './state'
 
-const { Immutable: { createStateStoreEnhanced } } = Common
+const { Immutable: { createStateStoreEnhanced, makeReduxLikeListener } } = Common
 
 const configure = ({ initialState = {} }) => {
-  const store = createStateStoreEnhanced({
+  const store = makeReduxLikeListener(createStateStoreEnhanced({
     initialState: {},
     enhancer: configureEnhancer({ ...stateEntryMap }),
     reducer: combineReducers({ ...stateReducerMap })
-  })
+  }))
   setInitialState(store, initialState)
   __DEV__ && console.log('[configure] initialState', store.getState())
   return { store }
