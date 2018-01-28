@@ -1,14 +1,15 @@
 import nodeModulePath from 'path'
-import { Common, Node } from 'dr-js/module/Dr.node'
+import { binary as formatBinary } from 'dr-js/module/common/format'
+import { BASIC_EXTENSION_MAP } from 'dr-js/module/common/module/MIME'
+import { receiveBufferAsync } from 'dr-js/module/node/resource'
+import { getEntityTagByContentHash } from 'dr-js/module/node/module/EntityTag'
+import { createResponderBufferCache, responderSendJSON } from 'dr-js/module/node/server/Responder'
+
 import { ROUTE_MAP } from 'config'
+
 import { getServerStatus } from './getServerStatus'
 import { getStaticFileList } from './getStaticFileList'
 export { saveBufferToFile } from './saveBufferToFile'
-
-const { Format, Module: { BASIC_EXTENSION_MAP } } = Common
-const { receiveBufferAsync } = Node.Resource
-const { getEntityTagByContentHash } = Node.Module
-const { createResponderBufferCache, responderSendJSON } = Node.Server.Responder
 
 const CACHE_EXPIRE_TIME = __DEV__ ? 0 : 60 * 1000 // in msec, 1min
 
@@ -25,7 +26,7 @@ const createResponderTask = ({ pathShare, routeShare, serveCacheMap }) => {
       const { asyncTask } = taskMap.get(taskKey)
       const buffer = Buffer.from(JSON.stringify(await asyncTask(postBody)))
 
-      __DEV__ && console.log(`[Task] task completed ${taskKey} ${Format.binary(buffer.length)}B`)
+      __DEV__ && console.log(`[Task] task completed ${taskKey} ${formatBinary(buffer.length)}B`)
       return { buffer, length: buffer.length, type: BASIC_EXTENSION_MAP.json, entityTag: getEntityTagByContentHash(buffer) }
     },
     expireTime: CACHE_EXPIRE_TIME,

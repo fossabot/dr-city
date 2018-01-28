@@ -1,11 +1,12 @@
-import { Common, Node } from 'dr-js/module/Dr.node'
+import { binary as formatBinary } from 'dr-js/module/common/format'
+import { BASIC_EXTENSION_MAP } from 'dr-js/module/common/module/MIME'
+import { getEntityTagByContentHash } from 'dr-js/module/node/module/EntityTag'
+import { createResponderBufferCache } from 'dr-js/module/node/server/Responder'
+
 import { ROUTE_MAP } from 'config'
+
 import { renderDefault } from './Default'
 import { renderMain } from './Main'
-
-const { Format, Module: { BASIC_EXTENSION_MAP } } = Common
-const { getEntityTagByContentHash } = Node.Module
-const { createResponderBufferCache } = Node.Server.Responder
 
 const CACHE_EXPIRE_TIME = __DEV__ ? 0 : 60 * 1000 // in msec, 1min
 
@@ -27,7 +28,7 @@ const createResponderRenderView = ({ getResourcePack, getResource, getShare, get
     getBufferData: async (store, viewKey) => {
       __DEV__ && console.log(`[View] render ${viewKey}`)
       const buffer = Buffer.from(await viewMap.get(viewKey)(data))
-      __DEV__ && console.log(`[View] rendered ${viewKey} ${Format.binary(buffer.length)}B`)
+      __DEV__ && console.log(`[View] rendered ${viewKey} ${formatBinary(buffer.length)}B`)
       return { buffer, length: buffer.length, type: BASIC_EXTENSION_MAP.html, entityTag: getEntityTagByContentHash(buffer) }
     },
     expireTime: CACHE_EXPIRE_TIME,

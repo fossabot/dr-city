@@ -1,53 +1,52 @@
-import { Node } from 'dr-js/module/Dr.node'
+import { packBufferPacket, parseBufferPacket } from 'dr-js/module/node/buffer'
+import { createResponderRouter, createRouteMap, getRouteParamAny, createResponderParseURL } from 'dr-js/module/node/server/Responder'
+import { WEB_SOCKET_EVENT_MAP, DATA_TYPE_MAP, enableWebSocketServer, createUpdateRequestListener } from 'dr-js/module/node/server/WebSocket'
+
 import { saveBufferToFile } from './Task'
 import { responderAuthVerifyToken } from './Responder'
-
-const {
-  Buffer: { packBufferPacket, parseBufferPacket },
-  Server: {
-    WebSocket: { WEB_SOCKET_EVENT_MAP, DATA_TYPE_MAP, enableWebSocketServer, createUpdateRequestListener },
-    Responder: {
-      createResponderRouter, createRouteMap, getRouteParamAny,
-      createResponderParseURL
-    }
-  }
-} = Node
 
 const DEFAULT_FRAME_LENGTH_LIMIT = 2 * 1024 * 1024 // 2 MiB
 const AUTH_FRAME_LENGTH_LIMIT = 32 * 1024 * 1024 // 32 MiB
 const REGEXP_AUTH_TOKEN = /auth-token!(.+)/
 
 // common protocol
-const enableProtocolTextJSON = (webSocket, onData) => webSocket.on(WEB_SOCKET_EVENT_MAP.FRAME, async (_, { dataType, dataBuffer }) => {
+const wrapFrameTextJSON = (onData) => async (webSocket, { dataType, dataBuffer }) => {
   __DEV__ && console.log(`>> FRAME:`, dataType, dataBuffer.length, dataBuffer.toString().slice(0, 20))
-  if (dataType !== DATA_TYPE_MAP.OPCODE_TEXT) return webSocket.close(1000, 'OPCODE_TEXT opcode expected')
+  __DEV__ && console.log(`>> FRAME:`, dataType, dataBuffer.length, dataBuffer.toString().slice(0, 20))
+  if (dataType !== DATA_TYPE_MAP.OPCODE_TEXT) return webSocket.close(1000, 'OPCODE_TEXT expected')
   try { await onData(JSON.parse(dataBuffer.toString())) } catch (error) {
-    __DEV__ && console.warn('[ERROR][enableProtocolTextJSON]', error)
+    __DEV__ && console.warn('[ERROR][wrapFrameTextJSON]', error)
     webSocket.close(1000, error.toString())
   }
-})
-const enableProtocolBufferPacket = (webSocket, onData) => webSocket.on(WEB_SOCKET_EVENT_MAP.FRAME, async (_, { dataType, dataBuffer }) => {
+}
+const wrapFrameBufferPacket = (onData) => async (webSocket, { dataType, dataBuffer }) => {
   __DEV__ && console.log(`>> FRAME:`, dataType, dataBuffer.length, dataBuffer.toString().slice(0, 20))
-  if (dataType !== DATA_TYPE_MAP.OPCODE_BINARY) return webSocket.close(1000, 'OPCODE_BINARY opcode expected')
+  if (dataType !== DATA_TYPE_MAP.OPCODE_BINARY) return webSocket.close(1000, 'OPCODE_BINARY expected')
   try { await onData(parseBufferPacket(dataBuffer)) } catch (error) {
-    __DEV__ && console.warn('[ERROR][enableProtocolBufferPacket]', error)
+    __DEV__ && console.warn('[ERROR][wrapFrameBufferPacket]', error)
     webSocket.close(1000, error.toString())
   }
-})
+}
 
 const getUpgradeRequestProtocolMap = ({ pathUser }) => {
   const authGroupInfoListMap = {}
   const protocolMap = {
-    'echo-text-json': ({ webSocket }) => enableProtocolTextJSON(webSocket, ({ type, payload }) => (
-      type === 'close'
-        ? webSocket.close(1000, 'CLOSE received')
-        : webSocket.sendText(JSON.stringify({ type, payload }))
-    )),
-    'echo-binary-packet': ({ webSocket }) => enableProtocolBufferPacket(webSocket, ([ headerString, payloadBuffer ]) => (
-      JSON.parse(headerString).type === 'close'
-        ? webSocket.close(1000, 'CLOSE received')
-        : webSocket.sendBuffer(packBufferPacket(headerString, payloadBuffer))
-    ))
+    'echo-text-json': (store) => {
+      const { webSocket } = store
+      webSocket.on(WEB_SOCKET_EVENT_MAP.FRAME, wrapFrameTextJSON(({ type, payload }) => (
+        type === 'close'
+          ? webSocket.close(1000, 'CLOSE received')
+          : webSocket.sendText(JSON.stringify({ type, payload }))
+      )))
+    },
+    'echo-binary-packet': (store) => {
+      const { webSocket } = store
+      webSocket.on(WEB_SOCKET_EVENT_MAP.FRAME, wrapFrameBufferPacket(([ headerString, payloadBuffer ]) => (
+        JSON.parse(headerString).type === 'close'
+          ? webSocket.close(1000, 'CLOSE received')
+          : webSocket.sendBuffer(packBufferPacket(headerString, payloadBuffer))
+      )))
+    }
   }
   const authProtocolMap = {
     ...protocolMap,
@@ -73,13 +72,13 @@ const getUpgradeRequestProtocolMap = ({ pathUser }) => {
         sendGroupUpdate()
         __DEV__ && console.log(`[responderUpdateRequestAuth] >> CLOSE, current group: ${groupInfoList.length} (self included)`, groupPath)
       })
-      enableProtocolTextJSON(webSocket, ({ type, payload }) => { // test for chat room
+      webSocket.on(WEB_SOCKET_EVENT_MAP.FRAME, wrapFrameTextJSON(({ type, payload }) => { // test for chat room
         if (type === 'close') return webSocket.close(1000, 'CLOSE received')
         if (type === 'text') {
           const text = JSON.stringify({ type, payload: { ...payload, name, id } })
           groupInfoList.forEach((v) => v.webSocket !== webSocket && v.webSocket.sendText(text))
         }
-      })
+      }))
     },
     'group-binary-packet': (store) => {
       const { webSocket } = store
@@ -103,7 +102,7 @@ const getUpgradeRequestProtocolMap = ({ pathUser }) => {
         sendGroupUpdate()
         __DEV__ && console.log(`[responderUpdateRequestAuth] >> CLOSE, current group: ${groupInfoList.length} (self included)`, groupPath)
       })
-      enableProtocolBufferPacket(webSocket, ([ headerString, payloadBuffer ]) => {
+      webSocket.on(WEB_SOCKET_EVENT_MAP.FRAME, wrapFrameBufferPacket(([ headerString, payloadBuffer ]) => {
         const { type, payload } = JSON.parse(headerString)
         if (type === 'close') return webSocket.close(1000, 'CLOSE received')
         if (type === 'buffer') {
@@ -111,19 +110,19 @@ const getUpgradeRequestProtocolMap = ({ pathUser }) => {
           const buffer = packBufferPacket(headerString, payloadBuffer)
           groupInfoList.forEach((v) => v.webSocket !== webSocket && v.webSocket.sendBuffer(buffer))
         }
-      })
+      }))
     },
     'upload-binary-packet': (store) => {
       const { webSocket } = store
       const { user: { id } } = store.getState()
-      enableProtocolBufferPacket(webSocket, async ([ headerString, payloadBuffer ]) => {
+      webSocket.on(WEB_SOCKET_EVENT_MAP.FRAME, wrapFrameBufferPacket(async ([ headerString, payloadBuffer ]) => {
         __DEV__ && console.log('[upload-binary-packet] get', headerString)
         const { type, payload } = JSON.parse(headerString)
         if (type === 'close') return webSocket.close(1000, 'CLOSE received')
         __DEV__ && console.log('[upload-binary-packet]', { type, payload }, payloadBuffer.length)
         await saveBufferToFile(`${pathUser}/${id}/upload`, payload.fileName, payloadBuffer)
         __DEV__ && console.log('[upload-binary-packet] done', { type, payload }, payloadBuffer.length)
-      })
+      }))
     }
   }
   return {

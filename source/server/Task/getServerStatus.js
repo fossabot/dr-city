@@ -1,7 +1,5 @@
-import { Common, Node } from 'dr-js/module/Dr.node'
-
-const { promiseQueue } = Common.Function
-const { runCommand } = Node.Module
+import { promiseQueue } from 'dr-js/module/common/function'
+import { runCommand } from 'dr-js/module/node/module/Command'
 
 const COMMAND_CONFIG_LIST_WINDOWS = [
   { name: 'GENERAL', command: 'systeminfo' }

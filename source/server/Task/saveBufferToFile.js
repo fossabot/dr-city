@@ -1,11 +1,6 @@
-import nodeModuleFs from 'fs'
 import nodeModulePath from 'path'
-import { promisify } from 'util'
-import { Node } from 'dr-js/module/Dr.node'
-
-const { File: { createDirectory } } = Node
-
-const writeFileAsync = promisify(nodeModuleFs.writeFile)
+import { writeFileAsync } from 'dr-js/module/node/file/__utils__'
+import { createDirectory } from 'dr-js/module/node/file/File'
 
 // The resulting path is normalized and trailing slashes are removed unless the path is resolved to the root directory.
 const saveBufferToFile = async (saveRoot, filePath, buffer) => {

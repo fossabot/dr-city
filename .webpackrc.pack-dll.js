@@ -1,7 +1,6 @@
 const nodeModulePath = require('path')
 const webpack = require('webpack')
 const ManifestPlugin = require('webpack-manifest-plugin')
-const CompressionPlugin = require('compression-webpack-plugin')
 const BabelMinifyPlugin = require('babel-minify-webpack-plugin')
 const { PATH_RESOURCE_PACK, PATH_RESOURCE_PACK_DLL_MANIFEST, DLL_NAME_MAP } = require('./config')
 const { HashedModuleIdsPlugin, DefinePlugin, BannerPlugin, DllPlugin, optimize: { ModuleConcatenationPlugin } } = webpack
@@ -31,8 +30,7 @@ const getDllConfig = (dllName, dllEntryChunks, isMinify) => {
       ...(IS_PRODUCTION ? [
         new ModuleConcatenationPlugin(),
         ...(isMinify ? [ new BabelMinifyPlugin() ] : []), // TODO: minification error: https://github.com/firebase/firebase-js-sdk/issues/154
-        new BannerPlugin({ banner: '/* eslint-disable */', raw: true, test: /\.js$/, entryOnly: false }),
-        new CompressionPlugin({ test: /\.js$/, minRatio: 1, deleteOriginalAssets: true })
+        new BannerPlugin({ banner: '/* eslint-disable */', raw: true, test: /\.js$/, entryOnly: false })
       ] : [])
     ]
   }

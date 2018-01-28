@@ -1,10 +1,6 @@
 import nodeModulePath from 'path'
-import { Node } from 'dr-js/module/Dr.node'
-
-const {
-  File: { createGetPathFromRoot },
-  Server: { Responder: { getRouteParamAny, createResponderServeStatic } }
-} = Node
+import { createGetPathFromRoot } from 'dr-js/module/node/file/Modify'
+import { getRouteParamAny, createResponderServeStatic } from 'dr-js/module/node/server/Responder'
 
 const CACHE_EXPIRE_TIME = __DEV__ ? 0 : 60 * 1000 // in msec, 1min
 

@@ -6,3 +6,4 @@
 /*.lock
 /source
 /pack-source
+/resource/**/*.gz

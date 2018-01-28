@@ -1,7 +1,6 @@
 import nodeModulePath from 'path'
-import { Node } from 'dr-js/module/Dr.node'
-
-const { FILE_TYPE, getDirectoryContent } = Node.File
+import { FILE_TYPE } from 'dr-js/module/node/file/File'
+import { getDirectoryContent } from 'dr-js/module/node/file/Directory'
 
 // single level
 // relativePath should be under staticRoot

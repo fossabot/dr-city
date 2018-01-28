@@ -1,28 +1,7 @@
-import nodeModuleFs from 'fs'
-import { Node } from 'dr-js/module/Dr.node'
-
-const { System: { setProcessExitListener }, File: { createDirectory }, Module: { createLogger } } = Node
-
-const configureProcess = async ({ pathLog, logFilePrefix, filePid }) => {
-  const logger = prefixLoggerTime(await configureLogger({ pathLogDirectory: pathLog, prefixLogFile: logFilePrefix }))
-
-  filePid && nodeModuleFs.writeFileSync(filePid, `${process.pid}`)
-
-  setProcessExitListener({
-    listenerAsync: async ({ eventType, ...exitState }) => {
-      __DEV__ && console.log('listenerAsync', eventType, exitState)
-      logger.add(`[SERVER DOWN] eventType: ${eventType}, exitState: ${JSON.stringify(exitState)}`)
-    },
-    listenerSync: ({ eventType, code }) => {
-      __DEV__ && console.log('listenerSync', eventType, code)
-      logger.add(`[SERVER EXIT] eventType: ${eventType}, code: ${code}`)
-      logger.end()
-      try { filePid && nodeModuleFs.unlinkSync(filePid) } catch (error) { __DEV__ && console.log('remove pid file', error) }
-    }
-  })
-
-  return { logger }
-}
+import { writeFileSync, unlinkSync } from 'fs'
+import { setProcessExitListener } from 'dr-js/module/node/system'
+import { createDirectory } from 'dr-js/module/node/file/File'
+import { createLogger } from 'dr-js/module/node/module/Logger'
 
 const DEFAULT_LOG_LENGTH_THRESHOLD = __DEV__ ? 10 : 1024
 const FILE_SPLIT_INTERVAL = __DEV__ ? 60 * 1000 : 24 * 60 * 60 * 1000 // 24hour, 1min in debug
@@ -48,6 +27,27 @@ const configureLogger = async ({
 const prefixLoggerTime = (logger) => {
   const { add } = logger
   return { ...logger, add: (...args) => add(new Date().toISOString(), ...args) }
+}
+
+const configureProcess = async ({ pathLog, logFilePrefix, filePid }) => {
+  const logger = prefixLoggerTime(await configureLogger({ pathLogDirectory: pathLog, prefixLogFile: logFilePrefix }))
+
+  filePid && writeFileSync(filePid, `${process.pid}`)
+
+  setProcessExitListener({
+    listenerAsync: async ({ eventType, ...exitState }) => {
+      __DEV__ && console.log('listenerAsync', eventType, exitState)
+      logger.add(`[SERVER DOWN] eventType: ${eventType}, exitState: ${JSON.stringify(exitState)}`)
+    },
+    listenerSync: ({ eventType, code }) => {
+      __DEV__ && console.log('listenerSync', eventType, code)
+      logger.add(`[SERVER EXIT] eventType: ${eventType}, code: ${code}`)
+      logger.end()
+      try { filePid && unlinkSync(filePid) } catch (error) { __DEV__ && console.log('remove pid file', error) }
+    }
+  })
+
+  return { logger }
 }
 
 export { configureProcess }

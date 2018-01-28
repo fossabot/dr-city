@@ -72,15 +72,16 @@ class WebSocketAuthGroupTextJSON extends PureComponent {
 
   render () {
     const { authGroupTextJSONWebSocket, classes } = this.props
-    const { logText, groupInfoList } = this.state
+    const { groupPath, name, logText, groupInfoList } = this.state
     const hasWebSocket = Boolean(authGroupTextJSONWebSocket)
     const allowSend = hasWebSocket && Boolean(groupInfoList.length >= 2)
     return <Card>
       <CardContent>
-        <Typography type="title" className={classes.title}>Auth Group Text JSON{groupInfoList.length ? ` (x${groupInfoList.length})` : ''}</Typography>
-        <TextField inputRef={this.setGroupPathRef} disabled={hasWebSocket} label="Group" placeholder="data-type" margin="normal" fullWidth />
-        <TextField inputRef={this.setNameRef} disabled={hasWebSocket} label="Name" placeholder="data-type" margin="normal" fullWidth />
-        <TextField inputRef={this.setTextJSONPayloadRef} disabled={!allowSend} label="Text" placeholder="data-payload" margin="normal" fullWidth multiline rowsMax={8} />
+        <Typography type="title" className={classes.title}>Auth Group Text JSON</Typography>
+        {!hasWebSocket && <TextField inputRef={this.setGroupPathRef} label="Group" placeholder="group-path" margin="normal" fullWidth />}
+        {!hasWebSocket && <TextField inputRef={this.setNameRef} label="Name" placeholder="display-name" margin="normal" fullWidth />}
+        {hasWebSocket && <Typography>{name}@{groupPath} #{groupInfoList.length}</Typography>}
+        {hasWebSocket && <TextField inputRef={this.setTextJSONPayloadRef} disabled={!allowSend} label="Text" placeholder="message-text" margin="normal" fullWidth multiline rowsMax={8} />}
       </CardContent>
       <Grid component="pre" className={classes.log}>{logText || 'LOG'}</Grid>
       <CardActions>

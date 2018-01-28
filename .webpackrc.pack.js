@@ -1,7 +1,6 @@
 const nodeModulePath = require('path')
 const webpack = require('webpack')
 const ManifestPlugin = require('webpack-manifest-plugin')
-const CompressionPlugin = require('compression-webpack-plugin')
 const BabelMinifyPlugin = require('babel-minify-webpack-plugin')
 const ExtractTextPlugin = require('extract-text-webpack-plugin')
 const { PATH_RESOURCE_PACK, PATH_RESOURCE_PACK_DLL_MANIFEST, DLL_NAME_MAP } = require('./config')
@@ -53,8 +52,7 @@ module.exports = {
       new ModuleConcatenationPlugin(),
       new BabelMinifyPlugin(),
       new BannerPlugin({ banner: '/* eslint-disable */', raw: true, test: /\.js$/, entryOnly: false }),
-      new BannerPlugin({ banner: '/* stylelint-disable */', raw: true, test: /\.css$/, entryOnly: false }),
-      new CompressionPlugin({ test: /\.(js|css)$/, minRatio: 1, deleteOriginalAssets: true })
+      new BannerPlugin({ banner: '/* stylelint-disable */', raw: true, test: /\.css$/, entryOnly: false })
     ] : [])
   ]
 }

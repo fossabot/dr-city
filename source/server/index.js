@@ -1,22 +1,20 @@
-import nodeModuleFs from 'fs'
-import { promisify } from 'util'
-import { Common, Node } from 'dr-js/module/Dr.node'
+import { readFileSync } from 'fs'
+import { clock } from 'dr-js/module/common/time'
+import { CacheMap } from 'dr-js/module/common/data/CacheMap'
+import { time as formatTime } from 'dr-js/module/common/format'
+import { createServer, createRequestListener } from 'dr-js/module/node/server'
+import {
+  responderEnd, responderEndWithRedirect,
+  createResponderRouter, createRouteMap, getRouteParam, getRouteParamAny,
+  createResponderParseURL
+} from 'dr-js/module/node/server/Responder'
+
+import { PATH_RESOURCE, GET_PACK_MANIFEST_MAP, ROUTE_MAP } from 'config'
+
 import { initFirebaseAdminApp, responderAuthVerifyToken, configureServeStatic } from './Responder'
 import { createResponderRenderView } from './View'
 import { createResponderTask, createResponderAuthTask } from './Task'
 import { configureWebSocketServer } from './webSocket'
-import { PATH_RESOURCE, GET_PACK_MANIFEST_MAP, ROUTE_MAP } from 'config'
-
-const readFileAsync = promisify(nodeModuleFs.readFile)
-const { Format, Time: { clock }, Data: { CacheMap } } = Common
-const {
-  createServer, createRequestListener,
-  Responder: {
-    responderEnd, responderEndWithRedirect,
-    createResponderRouter, createRouteMap, getRouteParam, getRouteParamAny,
-    createResponderParseURL
-  }
-} = Node.Server
 
 const CACHE_BUFFER_SIZE_SUM_MAX = 64 * 1024 * 1024 // in byte, 64mB
 
@@ -25,7 +23,7 @@ const configureServer = async ({
   pathShare, pathUser,
   fileFirebaseAdminToken
 }, { logger }) => {
-  const firebaseAdminApp = initFirebaseAdminApp(JSON.parse(await readFileAsync(fileFirebaseAdminToken, 'utf8')))
+  const firebaseAdminApp = initFirebaseAdminApp(JSON.parse(readFileSync(fileFirebaseAdminToken, 'utf8')))
   const wrapAuth = (next) => async (store) => next(store, await responderAuthVerifyToken(store, firebaseAdminApp, store.request.headers[ 'auth-token' ]))
 
   const packManifestMap = await GET_PACK_MANIFEST_MAP()
@@ -68,7 +66,7 @@ const configureServer = async ({
     const errorLog = state.error
       ? `[ERROR] ${store.request.method} ${store.request.url} ${store.response.finished ? 'finished' : 'not-finished'} ${state.error}`
       : ''
-    logger.add(`[END] ${Format.time(clock() - state.time)} ${store.response.statusCode} ${errorLog}`)
+    logger.add(`[END] ${formatTime(clock() - state.time)} ${store.response.statusCode} ${errorLog}`)
   }
 
   // create server
@@ -76,10 +74,10 @@ const configureServer = async ({
     protocol,
     hostname,
     port,
-    key: fileSSLKey ? await readFileAsync(fileSSLKey) : null,
-    cert: fileSSLCert ? await readFileAsync(fileSSLCert) : null,
-    ca: fileSSLChain ? await readFileAsync(fileSSLChain) : null,
-    dhparam: fileSSLDHParam ? await readFileAsync(fileSSLDHParam) : null // Diffie-Hellman Key Exchange
+    key: fileSSLKey ? readFileSync(fileSSLKey) : null,
+    cert: fileSSLCert ? readFileSync(fileSSLCert) : null,
+    ca: fileSSLChain ? readFileSync(fileSSLChain) : null,
+    dhparam: fileSSLDHParam ? readFileSync(fileSSLDHParam) : null // Diffie-Hellman Key Exchange
   })
 
   server.on('request', createRequestListener({

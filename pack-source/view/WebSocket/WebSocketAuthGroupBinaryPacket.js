@@ -90,23 +90,24 @@ class WebSocketAuthGroupBinaryPacket extends PureComponent {
 
   render () {
     const { authGroupBinaryPacketWebSocket, classes } = this.props
-    const { groupInfoList, logText, blobFileName } = this.state
+    const { groupPath, name, groupInfoList, logText, blobFileName } = this.state
     const hasWebSocket = Boolean(authGroupBinaryPacketWebSocket)
     const allowSend = hasWebSocket && Boolean(groupInfoList.length >= 2)
     return <Card>
       <CardContent>
-        <Typography type="title" className={classes.title}>Auth Group Buffer Packet{groupInfoList.length ? ` (x${groupInfoList.length})` : ''}</Typography>
-        <TextField inputRef={this.setGroupPathRef} disabled={hasWebSocket} label="Group" placeholder="data-type" margin="normal" fullWidth />
-        <TextField inputRef={this.setNameRef} disabled={hasWebSocket} label="Name" placeholder="data-type" margin="normal" fullWidth />
-        <TextField inputRef={this.setBufferPacketPayloadRef} disabled={!allowSend} label="Payload" placeholder="data-payload" margin="normal" fullWidth multiline rowsMax={8} />
+        <Typography type="title" className={classes.title}>Auth Group Buffer Packet</Typography>
+        {!hasWebSocket && <TextField inputRef={this.setGroupPathRef} label="Group" placeholder="group-path" margin="normal" fullWidth />}
+        {!hasWebSocket && <TextField inputRef={this.setNameRef} label="Name" placeholder="display-name" margin="normal" fullWidth />}
+        {hasWebSocket && <Typography>{name}@{groupPath} #{groupInfoList.length}</Typography>}
+        {hasWebSocket && <TextField inputRef={this.setBufferPacketPayloadRef} label="Text" placeholder="message-text" margin="normal" fullWidth multiline rowsMax={8} disabled={!allowSend} />}
         <input ref={this.setBufferPacketBlobRef} id="input-file" type="file" accept="*/*" style={{ display: 'none' }} onChange={this.onInputFileChange} disabled={!hasWebSocket} />
       </CardContent>
-      <CardActions>
+      {hasWebSocket && <CardActions>
         <label htmlFor="input-file">
           <Button component="span" disabled={!hasWebSocket}>{blobFileName ? `Blob: ${blobFileName}` : 'Select Blob'}</Button>
         </label>
         <Button onClick={this.clearInputFile} disabled={!hasWebSocket}>Clear Blob</Button>
-      </CardActions>
+      </CardActions>}
       <Grid component="pre" className={classes.log}>{logText || 'LOG'}</Grid>
       <CardActions>
         {hasWebSocket

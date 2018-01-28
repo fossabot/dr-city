@@ -1,58 +1,46 @@
-import { Common, Node } from 'dr-js/module/Dr.node'
+import { createOptionParser, OPTION_CONFIG_PRESET } from 'dr-js/module/common/module/OptionParser'
+import { parseOptionMap, createOptionGetter } from 'dr-js/module/node/module/ParseOption'
 
-const { createOptionParser, OPTION_CONFIG_PRESET } = Common.Module
-const { parseOptionMap, getOptionOptional, getSingleOptionOptional, getOption, getSingleOption } = Node.Module
-
-const SingleStringPathFormat = { ...OPTION_CONFIG_PRESET.SingleString, isPath: true }
-const HttpsOptionFormat = { optional: (optionMap) => optionMap[ 'protocol' ].argumentList[ 0 ] !== 'https:', ...SingleStringPathFormat }
+const { SingleString, SingleInteger } = OPTION_CONFIG_PRESET
+const SingleStringPath = { ...SingleString, isPath: true }
 
 const OPTION_CONFIG = {
   prefixENV: 'dr-city',
   formatList: [
     {
-      ...OPTION_CONFIG_PRESET.SingleString,
+      ...SingleString,
+      optional: true,
       name: 'config',
       shortName: 'c',
-      optional: true,
       description: `# from JSON: set to 'path/to/config.json'\n# from ENV: set to 'env'`
     },
-    { ...OPTION_CONFIG_PRESET.SingleString, name: 'hostname', shortName: 'h' },
-    { ...OPTION_CONFIG_PRESET.SingleInteger, name: 'port', shortName: 'p' },
+
+    { ...SingleString, name: 'hostname', shortName: 'h' },
+    { ...SingleInteger, name: 'port', shortName: 'p' },
     {
-      ...OPTION_CONFIG_PRESET.OneOfString([ 'https:', 'http:' ]),
-      name: 'protocol',
-      shortName: 't',
-      extendFormatList: [
-        { ...HttpsOptionFormat, name: 'file-SSL-key' },
-        { ...HttpsOptionFormat, name: 'file-SSL-cert' },
-        { ...HttpsOptionFormat, name: 'file-SSL-chain' },
-        { ...HttpsOptionFormat, name: 'file-SSL-dhparam' }
-      ]
-    },
-    { ...SingleStringPathFormat, name: 'path-share' },
-    { ...SingleStringPathFormat, name: 'path-user' },
-    {
-      ...SingleStringPathFormat,
-      name: 'path-log',
       optional: true,
+      name: 'https',
+      shortName: 's',
+      argumentCount: '0+',
       extendFormatList: [
-        { ...OPTION_CONFIG_PRESET.SingleString, name: 'prefix-log-file', optional: true }
+        { ...SingleStringPath, name: 'file-SSL-key' },
+        { ...SingleStringPath, name: 'file-SSL-cert' },
+        { ...SingleStringPath, name: 'file-SSL-chain' },
+        { ...SingleStringPath, name: 'file-SSL-dhparam' }
       ]
     },
-    { ...SingleStringPathFormat, name: 'file-pid', optional: true },
-    { ...SingleStringPathFormat, name: 'file-firebase-admin-token' }
+    { ...SingleStringPath, name: 'path-share' },
+    { ...SingleStringPath, name: 'path-user' },
+    { ...SingleStringPath, name: 'file-firebase-admin-token' },
+
+    { ...SingleStringPath, optional: true, name: 'path-log', extendFormatList: [ { ...SingleString, optional: true, name: 'prefix-log-file' } ] },
+    { ...SingleStringPath, optional: true, name: 'file-pid' }
   ]
 }
 
 const { parseCLI, parseENV, parseJSON, processOptionMap, formatUsage } = createOptionParser(OPTION_CONFIG)
 
-const parseOption = async () => ({
-  optionMap: await parseOptionMap({ parseCLI, parseENV, parseJSON, processOptionMap }),
-  getOption,
-  getOptionOptional,
-  getSingleOption,
-  getSingleOptionOptional
-})
+const parseOption = async () => createOptionGetter(await parseOptionMap({ parseCLI, parseENV, parseJSON, processOptionMap }))
 
 const exitWithError = (error) => {
   __DEV__ && console.warn(error)

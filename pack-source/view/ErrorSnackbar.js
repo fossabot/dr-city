@@ -19,7 +19,7 @@ class ErrorSnackbar extends PureComponent {
           key: id,
           message,
           action: retryFunc
-            ? <Button color="accent" dense onClick={() => setTimeout(() => retryFunc(), 500)}>retry</Button>
+            ? <Button color="primary" dense onClick={() => setTimeout(() => retryFunc(), 500)}>retry</Button>
             : null
         }} />)
       }, () => this.props.dispatch({ type: 'state:error:delete', payload: errorList.map(({ id }) => id) }))
